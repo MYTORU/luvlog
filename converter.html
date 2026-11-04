@@ -27,6 +27,8 @@ h2{font-weight:600;color:var(--sub);margin:0 0 10px}
 input[type=text],input[type=number]{width:100%;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
 input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:#b9d0ff;box-shadow:0 0 0 4px #e8f0ff}
 input[type=color]{width:100%;height:42px;padding:3px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer}
+.row select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer;height:42px}
+.pv mark{padding:1px 3px;border-radius:3px;color:inherit}
 .pv{margin-top:10px;font-weight:700;transition:color .25s;word-break:break-all}
 .grid{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"s r" "a a";gap:16px}
 .s{grid-area:s}.r{grid-area:r}
@@ -364,10 +366,19 @@ function render(){
     if(b.t==='x')return b.s;
     if(b.t==='st')return b.s?renderStatus(b.s):'';
     const c=chars.get(b.n);
-    const head=b.n===NONAME?b.l:`**${c.label||b.n}** | ${b.l}`;
+    const line=c.mode&&c.mode!=='none'?paintQ(b.l,c):b.l;
+    const head=b.n===NONAME?line:`**${c.label||b.n}** | ${line}`;
     return head+(b.tr!==null?`\n{{${c.size}:{{${c.color}:**${b.tr}**}}}}`:'');
   }).join('\n').trim();
   $('out').innerHTML=preview(raw);
+}
+
+// "대사" 부분에만 글자 색 / 형광펜 (따옴표가 안 닫혀 있으면 줄 전체)
+function paintQ(s,c){
+  const fc=m=>`{{${c.size}:{{${c.color}:**${m}**}}}}`,hl=m=>`==${c.hl}:${m}==`;
+  const w=c.mode==='hl'?hl:c.mode==='both'?m=>hl(fc(m)):fc;
+  const re=/"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
+  return re.test(s)?s.replace(re,w):w(s);
 }
 
 function preview(t){
@@ -385,25 +396,35 @@ function buildOptions(){
   keys.forEach((k,i)=>{
     const c=chars.get(k),d=document.createElement('div');
     d.className='char';d.dataset.i=i;d.style.animationDelay=(i*60)+'ms';
-    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>번역 색<input type="color" class="f-color"></label><label>번역 크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="pv">한국어 번역 미리보기</div>';
+    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode"><option value="none">그대로</option><option value="color">글자 색</option><option value="hl">형광펜</option><option value="both">글자 색 + 형광펜</option></select></label><label>형광펜 색<input type="color" class="f-hl"></label></div><div class="pv"><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">(번역) 줄이 있으면 번역에는 글자 색이 들어가요.</div>';
     const nm=d.querySelector('.f-name');
     if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';nm.style.display='none'}
     else{d.querySelector('.cn').textContent='원본 이름 · '+k;nm.value=c.label}
     d.querySelector('.f-color').value=c.color;
     d.querySelector('.f-size').value=c.size;
+    d.querySelector('.f-mode').value=c.mode;
+    d.querySelector('.f-hl').value=c.hl;
     box.appendChild(d);paint(d,c);
   });
 }
-function paint(d,c){const p=d.querySelector('.pv');p.style.color=c.color}
+function paint(d,c){
+  const t=d.querySelector('.pv-t'),fc=c.mode==='color'||c.mode==='both',hl=c.mode==='hl'||c.mode==='both';
+  t.style.color=fc?c.color:'var(--ink)';t.style.fontWeight=fc?'700':'400';
+  t.style.background=hl?c.hl:'none';t.style.padding=hl?'1px 3px':'0';t.style.borderRadius='3px';
+}
 
-$('chars').addEventListener('input',e=>{
+const onOpt=e=>{
   const d=e.target.closest('.char');if(!d)return;
   const c=chars.get([...chars.keys()][d.dataset.i]);
   c.label=d.querySelector('.f-name').value;
   c.color=d.querySelector('.f-color').value.toLowerCase();
   c.size=parseInt(d.querySelector('.f-size').value)||12;
+  c.mode=d.querySelector('.f-mode').value;
+  c.hl=d.querySelector('.f-hl').value.toLowerCase();
   paint(d,c);render();
-});
+};
+$('chars').addEventListener('input',onOpt);
+$('chars').addEventListener('change',onOpt);
 
 // 상태창 디자인 선택
 (()=>{
@@ -427,7 +448,7 @@ $('go').addEventListener('click',()=>{
   const src=$('src').value;if(!src.trim())return;
   blocks=parse(src);
   const next=new Map();let i=0;
-  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12});i++}});
+  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:b.n===NONAME?'hl':'none',hl:'#ffe08a'});i++}});
   chars=next;buildOptions();showFound();render();
   flash($('go'),'완료 ✓');
 });

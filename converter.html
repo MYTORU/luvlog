@@ -376,7 +376,7 @@ function render(){
 // "대사" 부분에만 글자 색 / 형광펜 (따옴표가 안 닫혀 있으면 줄 전체)
 function paintQ(s,c){
   const fc=m=>`{{${c.size}:{{${c.color}:**${m}**}}}}`,hl=m=>`==${c.hl}:${m}==`;
-  const w=c.mode==='hl'?hl:c.mode==='both'?m=>hl(fc(m)):fc;
+  const w=c.mode==='bold'?m=>`**${m}**`:c.mode==='hl'?hl:c.mode==='both'?m=>hl(fc(m)):fc;
   const re=/"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
   return re.test(s)?s.replace(re,w):w(s);
 }
@@ -396,7 +396,7 @@ function buildOptions(){
   keys.forEach((k,i)=>{
     const c=chars.get(k),d=document.createElement('div');
     d.className='char';d.dataset.i=i;d.style.animationDelay=(i*60)+'ms';
-    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode"><option value="none">그대로</option><option value="color">글자 색</option><option value="hl">형광펜</option><option value="both">글자 색 + 형광펜</option></select></label><label>형광펜 색<input type="color" class="f-hl"></label></div><div class="pv"><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">(번역) 줄이 있으면 번역에는 글자 색이 들어가요.</div>';
+    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode"><option value="none">그대로</option><option value="bold">굵게</option><option value="color">글자 색</option><option value="hl">형광펜</option><option value="both">글자 색 + 형광펜</option></select></label><label>형광펜 색<input type="color" class="f-hl"></label></div><div class="pv"><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">(번역) 줄이 있으면 번역에는 글자 색이 들어가요.</div>';
     const nm=d.querySelector('.f-name');
     if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';nm.style.display='none'}
     else{d.querySelector('.cn').textContent='원본 이름 · '+k;nm.value=c.label}
@@ -409,7 +409,7 @@ function buildOptions(){
 }
 function paint(d,c){
   const t=d.querySelector('.pv-t'),fc=c.mode==='color'||c.mode==='both',hl=c.mode==='hl'||c.mode==='both';
-  t.style.color=fc?c.color:'var(--ink)';t.style.fontWeight=fc?'700':'400';
+  t.style.color=fc?c.color:'var(--ink)';t.style.fontWeight=fc||c.mode==='bold'?'700':'400';
   t.style.background=hl?c.hl:'none';t.style.padding=hl?'1px 3px':'0';t.style.borderRadius='3px';
 }
 
@@ -448,7 +448,7 @@ $('go').addEventListener('click',()=>{
   const src=$('src').value;if(!src.trim())return;
   blocks=parse(src);
   const next=new Map();let i=0;
-  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:b.n===NONAME?'hl':'none',hl:'#ffe08a'});i++}});
+  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:'bold',hl:'#ffe08a'});i++}});
   chars=next;buildOptions();showFound();render();
   flash($('go'),'완료 ✓');
 });

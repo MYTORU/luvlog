@@ -128,14 +128,8 @@ function parse(src){
   const ex=extractStatus(src.replace(/\r/g,''));
   src=ex.src.replace(/<br\s*\/?>\s*(?=\()/gi,'\n');
   const L=src.split('\n'),out=[];
-  // 대사 다음 줄의 번역 찾기
-  const grabTr=i=>{
-    let j=i+1;while(j<L.length&&!L[j].trim())j++;
-    const n=L[j]||'';let t;
-    if(t=n.match(/^\s*\(([\s\S]*)\)\s*$/))return{tr:t[1],i:j};
-    if(t=n.match(/^\s*\{\{\d+:\{\{#[0-9a-fA-F]{3,8}:\*\*([\s\S]*?)\*\*\}\}\}\}\s*$/))return{tr:t[1],i:j};
-    return{tr:null,i};
-  };
+  // (괄호) 번역 줄은 건드리지 않고 원문 그대로 둠
+  const grabTr=i=>({tr:null,i});
   for(let i=0;i<L.length;i++){
     let l=L[i];
     const sm=l.trim().match(/^@@STATUS(\d+)@@$/);
@@ -453,7 +447,7 @@ function buildOptions(){
   keys.forEach((k,i)=>{
     const c=chars.get(k),d=document.createElement('div');
     d.className='char';d.dataset.i=i;d.style.animationDelay=(i*60)+'ms';
-    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">(번역) 줄이 있으면 번역에는 이 색이 들어가요.</div>';
+    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">따옴표 안 "대사"에만 적용돼요. (괄호) 줄은 그대로 둬요.</div>';
     const nm=d.querySelector('.f-name');
     if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';['.f-name','.w-nc','.pv-n','.pv-sep'].forEach(s=>d.querySelector(s).style.display='none')}
     else{d.querySelector('.cn').textContent='원본 이름 · '+k;nm.value=c.label}
@@ -492,7 +486,7 @@ $('chars').addEventListener('change',onOpt);
   sel.addEventListener('change',()=>{force=sel.value;if(blocks.length)render()});
 })();
 // 대사 꾸미기 전체 설정
-let gmode='bold';
+let gmode='colorbold';
 (()=>{
   const sel=$('gmode');
   sel.innerHTML=MODE_OPTS;sel.value=gmode;

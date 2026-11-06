@@ -60,6 +60,8 @@ button.done{background:var(--mint)!important;color:var(--mint-ink)!important}
   <section class="menu">
     <h2>상태창 디자인</h2>
     <div class="tplrow"><select id="tpl" aria-label="상태창 디자인"></select><span class="tplinfo" id="tplinfo"></span></div>
+    <h2>대사 꾸미기 (전체 한 번에)</h2>
+    <div class="tplrow"><select id="gmode" aria-label="대사 꾸미기 전체"></select><span class="tplinfo">아래 등장인물마다 따로 바꿀 수도 있어요.</span></div>
     <h2>등장인물 옵션</h2>
     <div class="chars" id="chars"><div class="empty">변환하기를 누르면 등장인물이 여기에 나타나요.</div></div>
   </section>
@@ -139,8 +141,8 @@ function parse(src){
     const sm=l.trim().match(/^@@STATUS(\d+)@@$/);
     if(sm){out.push({t:'st',s:ex.sts[+sm[1]]});continue}
     if(/\{\{img::[^}]*\}\}/.test(l)){l=l.replace(/\{\{img::[^}]*\}\}/g,'');if(!l.trim())continue}
-    // **이름** | "대사"
-    const m=l.match(/^\s*\*\*(.+?)\*\*\s*[|｜│]\s*(.*)$/);
+    // 이름 | "대사"  (이름에 ** 가 붙어 있어도 인식)
+    const m=l.match(/^\s*(?:\*\*)?([^|｜│*"“”「『\n]{1,30}?)(?:\*\*)?\s*[|｜│]\s*(.*["“「『].*)$/);
     if(m){
       const r=grabTr(i);i=r.i;
       out.push({t:'d',n:m[1].trim(),l:m[2].replace(/(<br\s*\/?>\s*)+$/i,'').trim(),tr:r.tr});continue;
@@ -198,28 +200,28 @@ const pct=s=>{const n=parseInt(String(s).replace(/[^0-9-]/g,''),10);return isNaN
 const withPct=s=>{const t=String(s||'').trim();if(!t)return'-';return/^-?\d+(\.\d+)?$/.test(t)?t+'%':t};
 const dPlus=s=>{const t=String(s||'').trim();if(!t)return'-';return/^d\s*\+/i.test(t)?t.replace(/^d\s*\+\s*/i,'D+'):'D+'+t};
 
+/* 공통 틀: DIARY 탭 · OUTFIT/POSE 칸은 모든 상태창에서 숨김 */
 function boxHtml(cfg,a){
   const p=cfg.p,raw=k=>String(a[k]||'').trim(),v=k=>H(a[k]);
   const empty=`<span class="${p}-empty">-</span>`,or=(k,d)=>raw(k)?v(k):d;
   const meta=['date','time','temperature','weather'].map(raw).filter(Boolean).map(E).join(' · ');
   const loc=raw('location');
   const chips=cfg.chips(a).map(([ic,val])=>`<div class="${p}-chip"><span>${ic}</span><span>${E(val)}</span></div>`).join('');
-  const who=(n,o,po,extra,cl)=>`<div class="${p}-who${cl}"><div class="${p}-who-n"><span>${n}</span>${extra}</div><div><span class="${p}-k">OUTFIT</span>${or(o,empty)}</div><div><span class="${p}-k">POSE</span>${or(po,empty)}</div></div>`;
-  const wants=LN(a.npcWants).slice(0,3),prom=LN(a.promises);
-  const lr=raw('lust'),ln=lr?pct(lr):null,lust=ln!==null?ln+'%':(lr||'-');
-  const sp=raw('sexPosition'),sfw=!sp||/^(n\/?a|-|없음|sfw)$/i.test(sp);
-  const con=/^(착용|on|true|1|o|yes)$/i.test(raw('condom'));
-  const dot=`<span class="${p}-dot">·</span>`;
-  const sex=`<span class="${p}-lust">${E(lust)}</span>${dot}`+(sfw
-    ?`<span class="${p}-empty" style="letter-spacing:2px;font-weight:700">N/A · SFW</span>`
-    :`<span><i>POS</i>${E(sp)}</span>${dot}<span><i>CONDOM</i><span class="${p}-pill${con?' on':''}">${con?'ON':'OFF'}</span></span>${dot}<span${cfg.climax?` class="${p}-climax"`:''}>${E((raw('npcClimax')||'0')+' : '+(raw('pcClimax')||'0'))}</span>`);
+  const wants=LN(a.npcWants).slice(0,3);
   const P={};
   P.status=`<div><div class="${p}-lbl">${cfg.icon} ${cfg.NPC}</div><div class="${p}-mind">${or('npcMind','...')}</div></div>`
     +`<div><div class="${p}-lbl">WANT TO DO</div><div class="${p}-box">${wants.length?wants.map((w,i)=>`<div class="${p}-num"><b>0${i+1}</b><span>${E(w)}</span></div>`).join(''):empty}</div></div>`
-    +`<div><div class="${p}-lbl">TMI</div><div class="${p}-box">${or('tmi',empty)}</div></div>`
-    +`<div><div class="${p}-lbl">NSFW</div><div class="${p}-box" style="white-space:normal;display:flex;flex-direction:column;gap:8px"><div class="${p}-sex">${sex}</div></div></div>`;
-  P.plan=`<div><div class="${p}-lbl">PLAN</div><div class="${p}-box" style="white-space:normal;display:flex;flex-direction:column;gap:6px"><div class="${p}-kv"><span>NOW</span><span>${or('scheduleNow','-')}</span></div><div class="${p}-kv"><span>NEXT</span><span>${or('scheduleNext','-')}</span></div></div></div>`
-    +`<div><div class="${p}-lbl">PROMISE</div><div class="${p}-box" style="white-space:normal">${prom.length?prom.map((x,i)=>`<div class="${p}-num" style="line-height:1.6"><b>0${i+1}</b><span style="color:var(${cfg.promInk})">${E(x)}</span></div>`).join(''):`<span class="${p}-empty">아직 맺은 약속이 없다.</span>`}</div></div>`;
+    +`<div><div class="${p}-lbl">TMI</div><div class="${p}-box">${or('tmi',empty)}</div></div>`;
+  if(cfg.nsfw){
+    const lr=raw('lust'),ln=lr?pct(lr):null,lust=ln!==null?ln+'%':(lr||'-');
+    const sp=raw('sexPosition'),sfw=!sp||/^(n\/?a|-|없음|sfw)$/i.test(sp);
+    const con=/^(착용|on|true|1|o|yes)$/i.test(raw('condom'));
+    const dot=`<span class="${p}-dot">·</span>`;
+    const sex=`<span class="${p}-lust">${E(lust)}</span>${dot}`+(sfw
+      ?`<span class="${p}-empty" style="letter-spacing:2px;font-weight:700">N/A · SFW</span>`
+      :`<span><i>POS</i>${E(sp)}</span>${dot}<span><i>CONDOM</i><span class="${p}-pill${con?' on':''}">${con?'ON':'OFF'}</span></span>${dot}<span${cfg.climax?` class="${p}-climax"`:''}>${E((raw('npcClimax')||'0')+' : '+(raw('pcClimax')||'0'))}</span>`);
+    P.status+=`<div><div class="${p}-lbl">NSFW</div><div class="${p}-box" style="white-space:normal;display:flex;flex-direction:column;gap:8px"><div class="${p}-sex">${sex}</div></div></div>`;
+  }
   const cm=nlv(a.communityComments).split(/\n\s*\n/).map(b=>b.split('\n').map(x=>x.trim()).filter(Boolean)).filter(b=>b.length).map(b=>({h:b.length>1?b[0]:'',b:(b.length>1?b.slice(1):b).join(' ')}));
   P.community=`<span class="${p}-badge">BABYLON</span><div class="${p}-comm-t">${or('communityTitle','-')}</div>`+cm.map(c=>`<div class="${p}-cmt">${c.h?`<div class="${p}-cmt-h">${E(c.h)}</div>`:''}<div class="${p}-cmt-b">${E(c.b)}</div></div>`).join('');
   P.interview=`<div class="${p}-q"><b>Q.</b>${or('interviewQ','-')}</div><div class="${p}-a"><b>A.</b>${or('interviewA','-')}</div>`+(cfg.tr&&raw('interviewATr')?`<div class="${p}-atr">(${v('interviewATr')})</div>`:'');
@@ -228,17 +230,17 @@ function boxHtml(cfg,a){
     +`<div class="${p}-tabs">${tabs.map(([k,l])=>`<label for="${id}-${k}" class="${p}-tab tb-${k}">${l}</label>`).join('')}</div><div class="${p}-tabline"></div>`
     +`<div class="${p}-panel">${tabs.map(([k])=>`<div class="pn pn-${k}">${P[k]}</div>`).join('')}</div>`;
   const head=`<summary class="${p}-sum"><div class="${p}-head"><div class="${p}-htop"><div class="${p}-title">${cfg.title}</div><span class="${p}-arrow"><span class="lc">▼</span><span class="lo">▲</span></span></div>${meta?`<div class="${p}-meta">${meta}</div>`:''}${loc?`<div class="${p}-meta">${E(loc)}</div>`:''}</div></summary>`;
-  const body=`<div class="${p}-body"><div class="${p}-inner"><div class="${p}-chips">${chips}</div><div class="${p}-emo"><div class="c">${or('npcKaomoji','-')}</div><span>♥</span><div class="u">${or('pcKaomoji','-')}</div></div><div class="${p}-row">${who(cfg.NPC,'npcOutfit','npcPose','','')}${who(cfg.PC,'pcOutfit','pcPose',cfg.guide?`<span class="${p}-guide">${E(withPct(a.guiding))}</span>`:'',' pc')}</div><div>${tabArea}</div></div></div>`;
+  const body=`<div class="${p}-body"><div class="${p}-inner"><div class="${p}-chips">${chips}</div><div class="${p}-emo"><div class="c">${or('npcKaomoji','-')}</div>${cfg.mid||'<span>♥</span>'}<div class="u">${or('pcKaomoji','-')}</div></div><div>${tabArea}</div></div></div>`;
   const common=`.${p}-det>summary{list-style:none}.${p}-det>summary::-webkit-details-marker{display:none}.${p} .lo{display:none}.${p}-det[open] .lo{display:inline}.${p}-det[open] .lc{display:none}.${p}-det[open] .${p}-head{border-radius:3px 3px 0 0}.${p}-r{display:none}.${p}-tab{display:block;text-align:center;user-select:none}.${p}-panel{display:block}.${p} .pn{display:none;flex-direction:column;gap:12px}`
     +tabs.map(([k])=>`.${p}-r.r-${k}:checked~.${p}-panel .pn-${k}{display:flex}.${p}-r.r-${k}:checked~.${p}-tabs .tb-${k}{${cfg.on}}`).join('');
   return `[html]\n<style>${cfg.css}${common}</style><div class="${p}"><details class="${p}-det">${head}${body}</details></div>\n[/html]`;
 }
 
 const SN_CFG={
-  p:'sn',NPC:'STRAY',PC:'NAVY',icon:'🐶',title:'#SN — STRAY × NAVY',guide:true,climax:true,tr:false,promInk:'--ink',
-  tabs:[['status','STATUS'],['plan','DIARY'],['interview','INT']],
+  p:'sn',NPC:'STRAY',PC:'NAVY',icon:'🐶',title:'#SN — STRAY × NAVY',nsfw:true,climax:true,tr:false,
+  tabs:[['status','STATUS'],['interview','INT']],
   on:'background:var(--acc);border-color:var(--acc);color:var(--on-acc);padding:7px 2px',
-  chips:a=>[['💛',withPct(a.affection)],['🐱',String(a.relation||'').trim()||'-'],['🫱🏻‍🫲🏻',dPlus(a.daysMet)],['💞',dPlus(a.daysTogether)],['💍',dPlus(a.daysMarried)]],
+  chips:a=>[['💛',withPct(a.affection)],['🐱',String(a.relation||'').trim()||'-'],['🫱🏻‍🫲🏻',dPlus(a.daysMet)],['💞',dPlus(a.daysTogether)],['💍',dPlus(a.daysMarried)],['🧭','NAVY '+withPct(a.guiding)]],
   css:`@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
 .sn{--acc:#edc70c;--on-acc:#1c1c1e;--pcc:#201787;--on-pcc:#f2f2f7;--bg:#ffffff;--bg2:#F2F2F7;--card:#ffffff;--chip:#ffffff;--line:#dcdce2;--ink:#1c1c1e;--txt:#3a3a3c;--mute:#8e8e93;--empty:#aeaeb2;font-family:'Pretendard Variable',Pretendard,'맑은 고딕','Malgun Gothic',sans-serif;max-width:440px;margin:auto;box-sizing:border-box;border-radius:3px;box-shadow:0 6px 20px rgba(0,0,0,.1);word-break:keep-all;overflow-wrap:break-word;color:var(--txt);font-size:12px;line-height:normal;letter-spacing:0;text-align:left}
 .sn *{box-sizing:border-box}
@@ -291,8 +293,8 @@ const SN_CFG={
 `};
 
 const AMD_CFG={
-  p:'amd',NPC:'RAYMOND',PC:'DARIA',icon:'🐯',title:'#AMOND — RAYMOND x DARIA',guide:false,climax:false,tr:true,promInk:'--ink2',
-  tabs:[['status','STATUS'],['plan','DIARY'],['community','COM'],['interview','INT']],
+  p:'amd',NPC:'RAYMOND',PC:'DARIA',icon:'🐯',title:'#AMOND — RAYMOND x DARIA',nsfw:true,climax:false,tr:true,
+  tabs:[['status','STATUS'],['community','COM'],['interview','INT']],
   on:'background:var(--red);border-color:var(--red);color:var(--ink);padding:7px 2px',
   chips:a=>[['🖤',withPct(a.affection)],['🦊',String(a.relation||'').trim()||'-'],['💕',dPlus(a.daysTogether)]],
   css:`@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
@@ -349,11 +351,58 @@ const AMD_CFG={
 .amd-empty{color:#6e5a5e}
 `};
 
+const TDG_CFG={
+  p:'tdg',NPC:'RAYMOND',PC:'ALEX',icon:'🐯',title:'#雙犬 — RAYMOND + ALEX',nsfw:false,tr:true,mid:'<span class="vs">VS</span>',
+  tabs:[['status','STATUS'],['community','COM'],['interview','INT']],
+  on:'background:var(--red);border-color:var(--red);color:var(--ink);padding:7px 2px',
+  chips:a=>[['🖤',withPct(a.affection)],['🦊',String(a.relation||'').trim()||'-'],['⚔️',dPlus(a.daysMet)]],
+  css:`@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+.tdg{--red:#c4180c;--red-d:#4a0805;--bg:#0e0b0c;--bg2:#110d0e;--card:#15100f;--card2:#120d0e;--chip:#181214;--line:#3c2a2f;--ink:#f5e9ea;--ink2:#f0e4e6;--txt:#d8c9cb;--mute:#a3898d;--dark:#1c1013;font-family:'Pretendard Variable',Pretendard,'맑은 고딕','Malgun Gothic',sans-serif;max-width:440px;margin:auto;box-sizing:border-box;word-break:keep-all;overflow-wrap:break-word;color:var(--txt);font-size:12px;line-height:normal;letter-spacing:0;text-align:left}
+.tdg *{box-sizing:border-box}
+.tdg-sum{display:block;width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;user-select:none;font-family:inherit;text-align:left}
+.tdg-head{background:linear-gradient(165deg,#1c1013 0%,#0d0809 75%);padding:14px 18px;border-radius:3px;width:100%}
+.tdg-htop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tdg-title{display:inline-block;background:var(--red);color:var(--ink);font-weight:800;font-size:12px;letter-spacing:1px;padding:5px 12px;border-radius:4px;margin-bottom:10px}
+.tdg-arrow{font-size:9px;color:var(--mute);padding-top:7px;flex-shrink:0}
+.tdg-meta{font-size:11px;font-weight:bold;color:var(--txt);letter-spacing:-.2px;margin-bottom:4px}
+.tdg-meta:last-child{margin-bottom:0}
+.tdg-body{background:var(--bg);border-radius:0 0 3px 3px;overflow:hidden;border:1px solid var(--line);border-top:4px solid var(--red);margin-top:0}
+.tdg-inner{background:var(--bg2);padding:18px 14px;display:flex;flex-direction:column;gap:14px}
+.tdg-chips{display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
+.tdg-chip{background:var(--chip);padding:4px 8px;border-radius:2px;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);color:var(--ink2);font-weight:bold;font-size:11px}
+.tdg-tabs{display:flex;gap:3px;align-items:flex-end}
+.tdg-tab{flex:1 1 0;min-width:0;border:1px solid var(--line);border-bottom:0;background:var(--chip);color:var(--mute);font-family:inherit;font-weight:800;font-size:9px;letter-spacing:.8px;padding:5px 2px;border-radius:3px 3px 0 0;cursor:pointer;line-height:1.2}
+.tdg-tabline{height:2px;background:var(--red)}
+.tdg-panel{border:1px solid var(--line);border-top:0;background:var(--card2);border-radius:0 0 3px 3px;padding:16px 14px;min-height:120px;font-size:11px;text-align:left}
+.tdg-lbl{font-size:11px;color:var(--ink);font-weight:bold;margin-bottom:4px}
+.tdg-box{font-size:11px;color:var(--txt);background:var(--bg2);border:1px solid var(--line);padding:6px 8px;border-radius:2px;line-height:1.5;white-space:pre-wrap}
+.tdg-mind{font-size:11px;color:var(--ink2);line-height:1.5;background:var(--bg2);padding:10px;border:1px solid var(--line);border-radius:2px;border-left:3px solid var(--red);white-space:pre-wrap}
+.tdg-num{display:flex;gap:8px;padding:1px 0;white-space:normal}
+.tdg-num b{color:var(--red);flex-shrink:0}
+.tdg-emo{display:flex;align-items:center;gap:6px}
+.tdg-emo div{flex:1;min-width:0;overflow-wrap:anywhere;font-family:sans-serif;font-weight:bold;font-size:11px;text-align:center;padding:8px 6px;border-radius:2px}
+.tdg-emo .c{background:var(--red);color:var(--ink)}
+.tdg-emo .u{background:#03fcdb;color:var(--dark)}
+.tdg-emo span{font-size:13px;color:var(--red);flex-shrink:0}
+.tdg-emo .vs{font-size:11px;font-weight:800;letter-spacing:1px;font-style:italic}
+.tdg-badge{display:inline-block;align-self:flex-start;background:var(--red);color:var(--ink);font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:2px}
+.tdg-comm-t{font-weight:800;font-size:13px;line-height:1.5;color:var(--ink)}
+.tdg-cmt{border-top:1px dashed var(--line);padding-top:8px}
+.tdg-cmt-h{font-size:9.5px;color:var(--red);font-weight:700;margin-bottom:2px}
+.tdg-cmt-b{color:var(--txt);line-height:1.5}
+.tdg-q{color:var(--mute)}
+.tdg-q b,.tdg-a b{color:var(--red);margin-right:6px}
+.tdg-a{font-size:12px;color:var(--ink2);font-weight:600;line-height:1.6}
+.tdg-atr{color:var(--mute);padding-left:20px;margin-top:-6px}
+.tdg-empty{color:#6e5a5e}
+`};
+
 /* ───────── 상태창 목록: 새 상태창은 여기에 한 줄 추가 ───────── */
 const TPL={
   Apogee:a=>apogeeHtml(a),
   SN:a=>boxHtml(SN_CFG,a),
   Amond:a=>boxHtml(AMD_CFG,a),
+  Twodogs:a=>boxHtml(TDG_CFG,a),
 };
 
 function renderStatus(s){
@@ -366,19 +415,27 @@ function render(){
     if(b.t==='x')return b.s;
     if(b.t==='st')return b.s?renderStatus(b.s):'';
     const c=chars.get(b.n);
-    const line=c.mode&&c.mode!=='none'?paintQ(b.l,c):b.l;
-    const head=b.n===NONAME?line:`**${c.label||b.n}** | ${line}`;
+    const line=paintQ(b.l,c),nm=c.label||b.n;
+    const head=b.n===NONAME?line:`${c.nc?`{{${c.size}:{{${c.color}:${nm}}}}}`:nm} | ${line}`;
     return head+(b.tr!==null?`\n{{${c.size}:{{${c.color}:**${b.tr}**}}}}`:'');
   }).join('\n').trim();
   $('out').innerHTML=preview(raw);
 }
 
-// "대사" 부분에만 글자 색 / 형광펜 (따옴표가 안 닫혀 있으면 줄 전체)
+// 대사 꾸미기 종류
+const MODES=[['none','꾸미지 않음'],['bold','굵게'],['color','글자 색'],['colorbold','글자 색 + 굵게']];
+const MODE_OPTS=MODES.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
+function deco(m,c){
+  if(c.mode==='bold')return `**${m}**`;
+  if(c.mode==='color')return `{{${c.size}:{{${c.color}:${m}}}}}`;
+  if(c.mode==='colorbold')return `{{${c.size}:{{${c.color}:**${m}**}}}}`;
+  return m;
+}
+// "대사" 부분에만 꾸미기 (따옴표가 안 닫혀 있으면 줄 전체)
 function paintQ(s,c){
-  const fc=m=>`{{${c.size}:{{${c.color}:**${m}**}}}}`,hl=m=>`==${c.hl}:${m}==`;
-  const w=c.mode==='bold'?m=>`**${m}**`:c.mode==='hl'?hl:c.mode==='both'?m=>hl(fc(m)):fc;
+  if(!c.mode||c.mode==='none')return s;
   const re=/"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
-  return re.test(s)?s.replace(re,w):w(s);
+  return re.test(s)?s.replace(re,m=>deco(m,c)):deco(s,c);
 }
 
 function preview(t){
@@ -392,25 +449,27 @@ function preview(t){
 function buildOptions(){
   const box=$('chars'),keys=[...chars.keys()];
   box.innerHTML='';
-  if(!keys.length){box.innerHTML='<div class="empty">등장인물을 찾지 못했어요. **이름** | "대사" 또는 "대사" 형식인지 확인해 주세요.</div>';return}
+  if(!keys.length){box.innerHTML='<div class="empty">등장인물을 찾지 못했어요. 이름 | "대사" 또는 "대사" 형식인지 확인해 주세요.</div>';return}
   keys.forEach((k,i)=>{
     const c=chars.get(k),d=document.createElement('div');
     d.className='char';d.dataset.i=i;d.style.animationDelay=(i*60)+'ms';
-    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode"><option value="none">그대로</option><option value="bold">굵게</option><option value="color">글자 색</option><option value="hl">형광펜</option><option value="both">글자 색 + 형광펜</option></select></label><label>형광펜 색<input type="color" class="f-hl"></label></div><div class="pv"><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">(번역) 줄이 있으면 번역에는 글자 색이 들어가요.</div>';
+    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label><label>크기<input type="number" class="f-size" min="8" max="48" inputmode="numeric"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">(번역) 줄이 있으면 번역에는 이 색이 들어가요.</div>';
     const nm=d.querySelector('.f-name');
-    if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';nm.style.display='none'}
+    if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';['.f-name','.w-nc','.pv-n','.pv-sep'].forEach(s=>d.querySelector(s).style.display='none')}
     else{d.querySelector('.cn').textContent='원본 이름 · '+k;nm.value=c.label}
     d.querySelector('.f-color').value=c.color;
     d.querySelector('.f-size').value=c.size;
     d.querySelector('.f-mode').value=c.mode;
-    d.querySelector('.f-hl').value=c.hl;
+    d.querySelector('.f-nc').value=c.nc?'1':'0';
     box.appendChild(d);paint(d,c);
   });
 }
 function paint(d,c){
-  const t=d.querySelector('.pv-t'),fc=c.mode==='color'||c.mode==='both',hl=c.mode==='hl'||c.mode==='both';
-  t.style.color=fc?c.color:'var(--ink)';t.style.fontWeight=fc||c.mode==='bold'?'700':'400';
-  t.style.background=hl?c.hl:'none';t.style.padding=hl?'1px 3px':'0';t.style.borderRadius='3px';
+  const t=d.querySelector('.pv-t'),n=d.querySelector('.pv-n');
+  t.style.color=c.mode==='color'||c.mode==='colorbold'?c.color:'var(--ink)';
+  t.style.fontWeight=c.mode==='bold'||c.mode==='colorbold'?'700':'400';
+  n.textContent=c.label;n.style.color=c.nc?c.color:'var(--ink)';n.style.fontWeight='400';
+  d.querySelector('.pv-sep').style.fontWeight='400';
 }
 
 const onOpt=e=>{
@@ -420,7 +479,7 @@ const onOpt=e=>{
   c.color=d.querySelector('.f-color').value.toLowerCase();
   c.size=parseInt(d.querySelector('.f-size').value)||12;
   c.mode=d.querySelector('.f-mode').value;
-  c.hl=d.querySelector('.f-hl').value.toLowerCase();
+  c.nc=d.querySelector('.f-nc').value==='1';
   paint(d,c);render();
 };
 $('chars').addEventListener('input',onOpt);
@@ -431,6 +490,17 @@ $('chars').addEventListener('change',onOpt);
   const sel=$('tpl');
   sel.innerHTML='<option value="auto">자동 (태그 이름대로)</option>'+Object.keys(TPL).map(k=>`<option value="${k}">${k}</option>`).join('');
   sel.addEventListener('change',()=>{force=sel.value;if(blocks.length)render()});
+})();
+// 대사 꾸미기 전체 설정
+let gmode='bold';
+(()=>{
+  const sel=$('gmode');
+  sel.innerHTML=MODE_OPTS;sel.value=gmode;
+  sel.addEventListener('change',()=>{
+    gmode=sel.value;chars.forEach(c=>c.mode=gmode);
+    if(chars.size)buildOptions();
+    if(blocks.length)render();
+  });
 })();
 function showFound(){
   const f=[...new Set(blocks.filter(b=>b.t==='st').map(b=>b.s.tag))];
@@ -448,7 +518,7 @@ $('go').addEventListener('click',()=>{
   const src=$('src').value;if(!src.trim())return;
   blocks=parse(src);
   const next=new Map();let i=0;
-  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:'bold',hl:'#ffe08a'});i++}});
+  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:gmode,nc:false});i++}});
   chars=next;buildOptions();showFound();render();
   flash($('go'),'완료 ✓');
 });

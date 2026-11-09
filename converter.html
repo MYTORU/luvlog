@@ -52,6 +52,8 @@ input[type=color]{width:100%;height:36px;padding:3px;border:1px solid var(--line
 .segm button.on{background:var(--ink);color:#fff}
 .sw{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .sw button{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0}
+.sw .sw-add{background:#fff;color:var(--sub);font-size:12px;line-height:18px;border-style:dashed}
+.sw .sw-add.done{background:var(--mint);color:var(--mint-ink)}
 .bub{display:inline-block;padding:6px 10px;border-radius:0 11px 11px 11px;margin-top:4px;max-width:100%}
 .bub.R{border-radius:11px 0 11px 11px}
 .g-head{font-weight:700;color:var(--sub);margin:12px 0 4px}
@@ -167,6 +169,7 @@ input[type=range]{width:100%}
         <div class="sec">
           <h3>채팅 말풍선</h3>
           <label class="chk"><input type="checkbox" id="o-time"> 시간 표시</label>
+          <label class="chk"><input type="checkbox" id="o-tr"> (괄호) 줄은 위 말풍선에 번역으로 붙이기</label>
           <label class="chk"><input type="checkbox" id="o-compact"> 한 줄로 압축 (줄바꿈이 깨질 때)</label>
           <div class="row">
             <label class="lbl">글자 크기
@@ -179,6 +182,27 @@ input[type=range]{width:100%}
           <h3>변환</h3>
           <label class="chk"><input type="checkbox" id="o-auto"> 붙여넣으면 바로 변환</label>
           <p class="hint">끄면 변환하기 버튼(또는 Ctrl+Enter)을 눌러야 바뀌어요.</p>
+        </div>
+        <div class="sec">
+          <h3>내 색상 팔레트</h3>
+          <div class="sw" id="mypal" style="margin-top:0"></div>
+          <div class="row" style="align-items:flex-end">
+            <label class="lbl" style="flex:0 0 70px">색<input type="color" id="pal-c" value="#3a55a8"></label>
+            <label class="lbl">코드<input type="text" id="pal-hex" placeholder="#3a55a8"></label>
+            <button class="btn sm" id="pal-add" type="button" style="height:36px">저장</button>
+          </div>
+          <p class="hint">저장한 색은 대사·말풍선 카드의 색 고르는 줄에 같이 떠요. 카드에서 <b>＋</b>를 눌러도 지금 색이 저장돼요. 동그라미를 길게 누르거나 우클릭하면 지워져요.</p>
+        </div>
+        <div class="sec">
+          <h3>설정 백업 · 다른 기기로 옮기기</h3>
+          <p class="hint" style="margin-top:0">설정은 이 브라우저에만 저장돼요. 폰이나 다른 컴퓨터에서 쓰려면 코드를 복사해서 거기서 붙여넣으면 돼요. 브라우저 기록을 지우기 전에도 한 번 복사해 두세요.</p>
+          <div class="row"><button class="btn sm pri" id="bk-copy" type="button">설정 코드 복사</button></div>
+          <details class="add" style="margin-top:8px">
+            <summary>설정 코드 붙여넣기</summary>
+            <textarea id="bk-in" placeholder="복사해 둔 설정 코드를 붙여넣으세요"></textarea>
+            <button class="btn sm pri" id="bk-load" type="button">불러오기</button>
+            <p class="hint" id="bk-msg"></p>
+          </details>
         </div>
       </div>
     </div>
@@ -269,9 +293,19 @@ const SW=['#fee500','#ffffff','#e9e9eb','#4f6fc4','#6b86d1','#3a55a8','#bfe0f7',
 const DEF=[{side:'L',bg:'#fee500'},{side:'R',bg:'#3a55a8'},{side:'L',bg:'#ffffff'},{side:'L',bg:'#f7c6d9'},{side:'L',bg:'#c9e7a7'},{side:'L',bg:'#bfe0f7'}];
 const PRESET={'똥개🐶':{side:'L',bg:'#fee500',fg:'#191919',fgManual:false,showName:true},'할망구':{side:'R',bg:'#3a55a8',fg:'#ffffff',fgManual:false,showName:true}};
 const CHAT_LANGS=['','text','txt','chat','kakao','talk'];
+let myPal=store.get('tc-pal',['#fee500','#3a55a8']);
+const swBtns=list=>list.map(x=>'<button type="button" style="background:'+x+'" data-c="'+x+'" title="'+x+'"></button>').join('');
+const palRow=()=>swBtns([...new Set([...myPal,...SW])])+'<button type="button" class="sw-add" title="지금 색을 내 팔레트에 저장">＋</button>';
+function addPal(c){c=String(c||'').trim().toLowerCase();if(!/^#[0-9a-f]{6}$/.test(c))return false;myPal=[c,...myPal.filter(x=>x!==c)].slice(0,24);store.set('tc-pal',myPal);refreshPal();return true}
+function delPal(c){myPal=myPal.filter(x=>x!==c);store.set('tc-pal',myPal);refreshPal()}
+function refreshPal(){
+  const box=document.getElementById('mypal');
+  if(box){box.innerHTML=myPal.length?swBtns(myPal):'<span class="empty">아직 저장한 색이 없어요.</span>';}
+  document.querySelectorAll('.sw.pal').forEach(el=>el.innerHTML=palRow());
+}
 const savedSpk=store.get('ckt-speakers',null)||JSON.parse(JSON.stringify(PRESET));
 const spk=JSON.parse(JSON.stringify(savedSpk));
-const copt=Object.assign({showTime:true,compact:false,fs:'14',maxw:'75',auto:true},store.get('ckt-opts',{}));
+const copt=Object.assign({showTime:true,compact:false,fs:'14',maxw:'75',auto:true,trJoin:true},store.get('ckt-opts',{}));
 const overrides={};
 let lastSpkSig=null,lastGrpSig=null,lastCharSig=null;
 
@@ -307,20 +341,25 @@ function parseChat(lines){
   const hasHead=clean.some(l=>matchHead(l));
   const hasColon=!hasHead&&clean.some(l=>matchColon(l));
   const groups=[];let cur=null;
+  const M=t=>({t,tr:''});
   for(const l of clean){
+    // (괄호) 줄은 바로 위 말풍선에 번역으로 붙임
+    if(copt.trJoin&&/^[\(（][\s\S]*[\)）]$/.test(l)&&cur&&cur.msgs.length&&!cur.msgs[cur.msgs.length-1].tr){
+      cur.msgs[cur.msgs.length-1].tr=l;continue;
+    }
     if(hasHead){
       const h=matchHead(l);
-      if(h){cur={name:h.name,time:h.time,msgs:[]};groups.push(cur);if(h.rest)cur.msgs.push(h.rest);continue;}
+      if(h){cur={name:h.name,time:h.time,msgs:[]};groups.push(cur);if(h.rest)cur.msgs.push(M(h.rest));continue;}
     }else if(hasColon){
       const c=matchColon(l);
       if(c){
         if(!cur||cur.name!==c.name||(c.time&&cur.time&&c.time!==cur.time)){cur={name:c.name,time:c.time,msgs:[]};groups.push(cur);}
         else if(c.time)cur.time=c.time;
-        cur.msgs.push(c.msg);continue;
+        cur.msgs.push(M(c.msg));continue;
       }
     }
     if(!cur){cur={name:'',time:'',msgs:[]};groups.push(cur);}
-    cur.msgs.push(l);
+    cur.msgs.push(M(l));
   }
   return {groups:groups.filter(g=>g.msgs.length),recognized:hasHead||hasColon};
 }
@@ -333,7 +372,8 @@ function baseCss(){
   +".ckt-b{position:relative;max-width:"+copt.maxw+"%;padding:8px 11px;font-size:"+copt.fs+"px;line-height:1.5;border-radius:12px;text-align:left;word-break:keep-all;overflow-wrap:break-word}"
   +".ckt-L .ckt-b.f{border-top-left-radius:0}.ckt-R .ckt-b.f{border-top-right-radius:0}"
   +".ckt-b.f::before{content:'';position:absolute;top:0;width:0;height:0;border-top:9px solid transparent}"
-  +".ckt-L .ckt-b.f::before{left:-7px;border-left:8px solid transparent}.ckt-R .ckt-b.f::before{right:-7px;border-right:8px solid transparent}";
+  +".ckt-L .ckt-b.f::before{left:-7px;border-left:8px solid transparent}.ckt-R .ckt-b.f::before{right:-7px;border-right:8px solid transparent}"
+  +".ckt-tr{display:block;font-size:.86em;opacity:.72;margin-top:3px}";
 }
 function buildChat(groups){
   const used={};const lines=[];let prev=null;
@@ -346,7 +386,7 @@ function buildChat(groups){
     lines.push('<div class="ckt-g ckt-'+side+' '+cls+(cont?' c':'')+'">');
     if(c.showName&&!cont&&g.name)lines.push('<div class="ckt-n">'+E(g.name)+'</div>');
     g.msgs.forEach((m,mi)=>{
-      const b='<div class="ckt-b'+(mi===0&&!cont?' f':'')+'">'+E(m)+'</div>';
+      const b='<div class="ckt-b'+(mi===0&&!cont?' f':'')+'">'+E(m.t)+(m.tr?'<span class="ckt-tr">'+E(m.tr)+'</span>':'')+'</div>';
       const t=(mi===g.msgs.length-1&&copt.showTime&&g.time)?'<span class="ckt-t">'+E(g.time)+'</span>':'';
       lines.push('<div class="ckt-r">'+(side==='R'?t+b:b+t)+'</div>');
     });
@@ -673,7 +713,7 @@ function render(){
   chats.forEach(x=>x.eff.forEach(g=>{if(!names.includes(g.name))names.push(g.name)}));
   names.forEach((nm,i)=>ensureSpeaker(nm,i));
   const ss=names.join('\u0001');if(ss!==lastSpkSig){lastSpkSig=ss;renderSpeakers(names)}
-  const gs=chats.map(x=>x.groups.map(g=>g.name+'|'+g.time+'|'+g.msgs.join('\u0002')).join(';')).join('#');
+  const gs=chats.map(x=>x.groups.map(g=>g.name+'|'+g.time+'|'+g.msgs.map(m=>m.t+'\u0003'+m.tr).join('\u0002')).join(';')).join('#');
   if(gs!==lastGrpSig){lastGrpSig=gs;renderGroups(chats)}
   raw=blocks.map(b=>{
     if(b.t==='x')return b.s;
@@ -723,7 +763,7 @@ function buildOptions(){
   keys.forEach((k,i)=>{
     const c=chars.get(k),d=document.createElement('div');
     d.className='char';d.dataset.k=k;d.style.animationDelay=(i*50)+'ms';
-    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label class="lbl">색<input type="color" class="f-color"></label></div><div class="row"><label class="lbl">"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="lbl w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div>';
+    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label class="lbl">색<input type="color" class="f-color"></label></div><div class="sw pal">'+palRow()+'</div><div class="row"><label class="lbl">"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="lbl w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div>';
     const nm=d.querySelector('.f-name');
     if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';['.f-name','.w-nc','.pv-n','.pv-sep'].forEach(s=>d.querySelector(s).style.display='none')}
     else{d.querySelector('.cn').textContent='원본 이름 · '+k;nm.value=c.label}
@@ -749,6 +789,12 @@ const onOpt=e=>{
   savedChars[k]=c;store.set('tc-chars',savedChars);
   paint(d,c);render();
 };
+$('chars').addEventListener('click',e=>{
+  const x=e.target.closest('.sw button');if(!x)return;
+  const d=x.closest('.char'),ci=d.querySelector('.f-color');
+  if(x.classList.contains('sw-add')){addPal(ci.value);flash(x,'✓');return}
+  ci.value=x.dataset.c;onOpt({target:ci});
+});
 $('chars').addEventListener('input',onOpt);
 $('chars').addEventListener('change',onOpt);
 
@@ -762,7 +808,7 @@ function renderSpeakers(names){
     const el=document.createElement('div');el.className='spk';
     el.innerHTML='<div class="spk-top"><b></b><span class="segm"><button type="button" data-side="L">왼쪽</button><button type="button" data-side="R">오른쪽</button></span></div>'
       +'<div class="row" style="margin-top:0"><label class="lbl">말풍선<input type="color" class="bg"></label><label class="lbl">글자<input type="color" class="fg"></label></div>'
-      +'<div class="sw">'+SW.map(x=>'<button type="button" style="background:'+x+'" data-c="'+x+'" title="'+x+'"></button>').join('')+'</div>'
+      +'<div class="sw pal">'+palRow()+'</div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><label class="chk"><input type="checkbox" class="sn"> 이름 표시</label><span class="bub">미리보기</span></div>';
     el.querySelector('b').textContent=n||'(이름 없음)';
     const bg=el.querySelector('.bg'),fg=el.querySelector('.fg'),sn=el.querySelector('.sn'),bub=el.querySelector('.bub');
@@ -773,7 +819,9 @@ function renderSpeakers(names){
     };
     const changed=()=>{saveSpeaker(n);sync();render();};
     el.querySelectorAll('.segm button').forEach(x=>x.onclick=()=>{c.side=x.dataset.side;changed();});
-    el.querySelectorAll('.sw button').forEach(x=>x.onclick=()=>{c.bg=x.dataset.c;c.fg=autoFg(c.bg);c.fgManual=false;changed();});
+    el.querySelector('.sw').addEventListener('click',e=>{const x=e.target.closest('button');if(!x)return;
+      if(x.classList.contains('sw-add')){addPal(c.bg);flash(x,'✓');return}
+      c.bg=x.dataset.c;c.fg=autoFg(c.bg);c.fgManual=false;changed();});
     bg.oninput=()=>{c.bg=bg.value;if(!c.fgManual)c.fg=autoFg(c.bg);changed();};
     fg.oninput=()=>{c.fg=fg.value;c.fgManual=true;changed();};
     sn.onchange=()=>{c.showName=sn.checked;changed();};
@@ -791,7 +839,7 @@ function renderGroups(chats){
       row.innerHTML='<input type="text" class="gn" placeholder="이름을 넣어주세요"><input type="text" class="gt" placeholder="시간 (예: 오후 3:12)"><span class="snip"></span>';
       const gn=row.querySelector('.gn'),gt=row.querySelector('.gt');
       gn.value=g.name;gt.value=g.time;
-      row.querySelector('.snip').textContent=g.msgs.length+'개 · '+g.msgs[0];
+      row.querySelector('.snip').textContent=g.msgs.length+'개 · '+g.msgs[0].t;
       row.classList.toggle('need',!g.name);
       const upd=()=>{overrides[g.key]={name:gn.value.trim(),time:gt.value.trim()};row.classList.toggle('need',!gn.value.trim());render();};
       gn.oninput=upd;gt.oninput=upd;
@@ -836,9 +884,9 @@ document.querySelectorAll('.stab').forEach(b=>b.onclick=()=>{
     lastCharSig=null;convert();
   });
 })();
-[['o-time','showTime','checked'],['o-compact','compact','checked'],['o-fs','fs','value'],['o-maxw','maxw','value'],['o-auto','auto','checked']].forEach(([id,k,prop])=>{
+[['o-tr','trJoin','checked'],['o-time','showTime','checked'],['o-compact','compact','checked'],['o-fs','fs','value'],['o-maxw','maxw','value'],['o-auto','auto','checked']].forEach(([id,k,prop])=>{
   const el=$(id);el[prop]=copt[k];
-  const on=()=>{copt[k]=el[prop];store.set('ckt-opts',copt);$('maxw-v').textContent=copt.maxw+'%';if(k!=='auto'&&blocks.length)render();};
+  const on=()=>{copt[k]=el[prop];store.set('ckt-opts',copt);$('maxw-v').textContent=copt.maxw+'%';if(k==='trJoin')convert();else if(k!=='auto'&&blocks.length)render();};
   el.addEventListener('input',on);el.addEventListener('change',on);
 });
 $('maxw-v').textContent=copt.maxw+'%';
@@ -882,6 +930,40 @@ $('m-add').onclick=()=>{
   ta.value=before+(before&&!before.endsWith('\n\n')?(before.endsWith('\n')?'\n':'\n\n'):'')+block+(after&&!after.startsWith('\n')?'\n\n':'')+after;
   $('m-msgs').value='';convert();
 };
+
+/* ───────── 내 팔레트 · 백업 ───────── */
+$('pal-c').addEventListener('input',()=>{$('pal-hex').value=$('pal-c').value});
+$('pal-hex').addEventListener('input',()=>{const v=$('pal-hex').value.trim();if(/^#?[0-9a-fA-F]{6}$/.test(v))$('pal-c').value=(v[0]==='#'?v:'#'+v).toLowerCase()});
+$('pal-add').onclick=()=>{let v=$('pal-hex').value.trim()||$('pal-c').value;if(v[0]!=='#')v='#'+v;if(addPal(v))flash($('pal-add'),'✓');else{$('pal-hex').focus()}};
+// 길게 누르거나 우클릭하면 삭제
+(()=>{
+  let t=null;
+  const target=e=>{const x=e.target.closest('.sw button[data-c]');return x&&myPal.includes(x.dataset.c)?x:null};
+  const ask=x=>{if(confirm(x.dataset.c+' 색을 내 팔레트에서 지울까요?'))delPal(x.dataset.c)};
+  document.addEventListener('contextmenu',e=>{const x=target(e);if(x){e.preventDefault();ask(x)}});
+  document.addEventListener('touchstart',e=>{const x=target(e);if(x)t=setTimeout(()=>{t=null;ask(x)},600)},{passive:true});
+  ['touchend','touchmove','touchcancel'].forEach(n=>document.addEventListener(n,()=>{if(t){clearTimeout(t);t=null}}));
+})();
+const b64e=s=>btoa(unescape(encodeURIComponent(s))),b64d=s=>decodeURIComponent(escape(atob(s)));
+$('bk-copy').onclick=async e=>{
+  const code='TC1:'+b64e(JSON.stringify({spk:savedSpk,chars:savedChars,pal:myPal,copt,gmode}));
+  try{await navigator.clipboard.writeText(code)}catch(err){const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  flash(e.target,'복사됨 ✓');
+};
+$('bk-load').onclick=()=>{
+  try{
+    let v=$('bk-in').value.trim();if(v.startsWith('TC1:'))v=b64d(v.slice(4));
+    const d=JSON.parse(v);
+    if(d.spk)store.set('ckt-speakers',d.spk);
+    if(d.chars)store.set('tc-chars',d.chars);
+    if(d.pal)store.set('tc-pal',d.pal);
+    if(d.copt)store.set('ckt-opts',d.copt);
+    if(d.gmode)store.set('tc-gmode',d.gmode);
+    $('bk-msg').textContent='불러왔어요! 곧 새로고침돼요.';
+    setTimeout(()=>location.reload(),700);
+  }catch(err){$('bk-msg').textContent='코드를 읽지 못했어요. 전부 복사됐는지 확인해 주세요.'}
+};
+refreshPal();
 
 $('src').value=store.get('tc-src','');
 convert();

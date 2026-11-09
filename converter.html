@@ -2,85 +2,226 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>텍스트 변환기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
 <style>
-:root{--ink:#1d1d1f;--sub:#86868b;--line:#ececf1;--card:#fafafc;--blue:#d3e3ff;--blue-ink:#3b5b9a;--mint:#c9f1dd;--mint-ink:#2c7653}
-*{box-sizing:border-box;font-size:12px}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:#fff;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;line-height:1.75;letter-spacing:-.01em;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 72px}
-header{margin-bottom:22px}
-h1{font-weight:700;margin:0;letter-spacing:-.02em}
-header p{margin:4px 0 0;color:var(--sub)}
-h2{font-weight:600;color:var(--sub);margin:0 0 10px}
-.menu{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:20px}
-.tplrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.tplrow select{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer}
-.tplinfo{color:var(--sub)}
-.chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-.empty{color:var(--sub);padding:6px 2px}
-.char{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;animation:pop .45s ease both}
-.cn{color:var(--sub);margin-bottom:8px;word-break:break-all}
-.row{display:flex;gap:10px;margin-top:10px}
-.row label{flex:1;color:var(--sub);display:flex;flex-direction:column;gap:4px}
-input[type=text],input[type=number]{width:100%;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
-input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:#b9d0ff;box-shadow:0 0 0 4px #e8f0ff}
-input[type=color]{width:100%;height:42px;padding:3px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer}
-.row select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer;height:42px}
-.pv mark{padding:1px 3px;border-radius:3px;color:inherit}
-.pv{margin-top:10px;font-weight:700;transition:color .25s;word-break:break-all}
-.grid{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"s r" "a a";gap:16px}
-.s{grid-area:s}.r{grid-area:r}
-.pane{display:flex;flex-direction:column;min-width:0}
-textarea,.out{width:100%;height:56vh;min-height:300px;font:inherit;line-height:1.75;padding:16px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s}
-textarea{resize:vertical}
-.out{background:#fff;overflow:auto;word-break:break-word}
-.out:empty::before{content:attr(data-ph);color:#a1a1a6}
-.tx{white-space:pre-wrap}
-.actions{grid-area:a;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.actions button{font:inherit;font-weight:600;border:0;border-radius:14px;padding:13px 30px;cursor:pointer;transition:background .35s,color .35s,transform .2s;-webkit-tap-highlight-color:transparent}
-.actions button:active{transform:scale(.97)}
-#go{background:var(--blue);color:var(--blue-ink);min-width:150px}
-#cp{background:#f1f1f5;color:#55555a}
-button.done{background:var(--mint)!important;color:var(--mint-ink)!important}
-@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media(max-width:760px){.wrap{padding:24px 16px 56px}.grid{grid-template-columns:1fr;grid-template-areas:"s" "a" "r"}textarea,.out{height:360px;min-height:320px}.actions button{flex:1}}
+:root{--ink:#1d1d1f;--sub:#86868b;--line:#ececf1;--card:#fafafc;--bg:#f4f4f7;--blue:#d3e3ff;--blue-ink:#3b5b9a;--mint:#c9f1dd;--mint-ink:#2c7653;--warn:#e5484d}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:12px;line-height:1.6;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* 전체 틀 */
+.app{display:grid;grid-template-columns:350px minmax(0,1fr);gap:14px;padding:14px;height:100vh;height:100dvh}
+.side{background:#fff;border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.brand{padding:16px 18px 12px}
+.brand b{font-size:15px;display:block;letter-spacing:-.02em}
+.brand span{color:var(--sub)}
+.stabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 10px 10px;border-bottom:1px solid var(--line)}
+.stab{border:0;background:none;border-radius:12px;padding:8px 2px 6px;cursor:pointer;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600;transition:background .2s,color .2s}
+.stab:hover{background:#f4f4f7}
+.stab .ic{font-size:15px;line-height:1}
+.stab em{font-style:normal;font-size:10px;font-weight:500;opacity:.75;min-height:15px}
+.stab.on{background:var(--ink);color:#fff}
+.sbody{flex:1;overflow:auto;padding:16px}
+.pg{display:none}.pg.on{display:block;animation:pop .3s ease both}
+h3{font-size:12px;font-weight:700;color:var(--sub);margin:0 0 8px}
+.sec{margin-bottom:22px}
+.sec:last-child{margin-bottom:0}
+.hint{color:var(--sub);margin:6px 0 0}
+.empty{color:var(--sub);padding:2px}
+select,input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:none;min-width:0}
+input[type=text]:focus,select:focus,textarea:focus{border-color:#b9d0ff;box-shadow:0 0 0 3px #e8f0ff}
+input[type=color]{width:100%;height:36px;padding:3px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer;padding:3px 0}
+.lbl{display:flex;flex-direction:column;gap:4px;color:var(--sub);flex:1;min-width:0}
+.row{display:flex;gap:8px;margin-top:8px}
+
+/* 대사 등장인물 카드 */
+.char{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;animation:pop .4s ease both}
+.cn{color:var(--sub);margin-bottom:6px;word-break:break-all}
+.char .pv{margin-top:8px;word-break:break-all}
+
+/* 채팅 말풍선 카드 */
+.spk{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px}
+.spk-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.spk-top b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.segm{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-shrink:0;background:#fff}
+.segm button{border:0;background:none;padding:4px 10px;cursor:pointer;color:var(--sub)}
+.segm button.on{background:var(--ink);color:#fff}
+.sw{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.sw button{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0}
+.bub{display:inline-block;padding:6px 10px;border-radius:0 11px 11px 11px;margin-top:4px;max-width:100%}
+.bub.R{border-radius:11px 0 11px 11px}
+.g-head{font-weight:700;color:var(--sub);margin:12px 0 4px}
+.g-head:first-child{margin-top:0}
+.g-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:7px 0;border-bottom:1px solid var(--line)}
+.g-row .snip{grid-column:1/-1;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-row.need .gn{border-color:var(--warn)}
+details.add{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+details.add summary{cursor:pointer;font-weight:700;color:var(--sub)}
+details.add[open] summary{margin-bottom:8px}
+details.add textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:12px;padding:9px 11px;outline:none;resize:vertical;margin:6px 0 8px;background:#fff}
+input[type=range]{width:100%}
+
+/* 오른쪽 메인 */
+.main{display:flex;flex-direction:column;gap:12px;min-height:0;min-width:0}
+.bar{background:#fff;border:1px solid var(--line);border-radius:20px;padding:10px 12px 10px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.found{color:var(--sub)}
+.found b{color:var(--ink);font-weight:600}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:10px 22px;cursor:pointer;font-weight:600;background:#f1f1f5;color:#55555a;transition:background .3s,color .3s,transform .15s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--blue);color:var(--blue-ink)}
+.btn.sm{padding:6px 11px;border-radius:10px;font-weight:500}
+.btn.done{background:var(--mint)!important;color:var(--mint-ink)!important}
+.panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pane{background:#fff;border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px 9px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;min-height:48px}
+.ph b{font-size:13px}
+.ph .btns{gap:6px}
+.pane textarea{flex:1;min-height:0;width:100%;border:0;outline:none;resize:none;padding:16px;line-height:1.85;background:#fff;box-shadow:none!important}
+#code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:1.6;color:#55555a}
+.out{flex:1;min-height:0;overflow:auto;padding:20px 18px;font-size:13px;line-height:1.85;transition:background .25s,color .25s}
+.out.dark{background:#151515;color:#e8e8e8}
+.out.light{background:#fff;color:#333}
+.out:empty::before{content:'변환 결과가 여기에 표시돼요';color:#8e8e93}
+.out .tx{white-space:pre-wrap;word-break:break-word}
+.hb{margin:18px 0}.hb:first-child{margin-top:0}.hb:last-child{margin-bottom:0}
+
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:1000px){
+  .app{grid-template-columns:1fr;height:auto;padding:10px}
+  .sbody{max-height:48vh}
+  .panes{grid-template-columns:1fr}
+  .pane{height:72vh}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-.hb{margin:20px 0}.hb:first-child{margin-top:0}.hb:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>텍스트 변환기</h1>
-    <p>붙여넣고 변환하면 등장인물이 자동으로 분류돼요.</p>
-  </header>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>텍스트 변환기</b><span>상태창 · 대사 · 채팅 말풍선을 한 번에</span></div>
+    <nav class="stabs">
+      <button class="stab on" data-tab="dlg" type="button"><span class="ic">💬</span>대사<em id="bd-dlg"></em></button>
+      <button class="stab" data-tab="chat" type="button"><span class="ic">📱</span>채팅<em id="bd-chat"></em></button>
+      <button class="stab" data-tab="st" type="button"><span class="ic">🪪</span>상태창<em id="bd-st"></em></button>
+      <button class="stab" data-tab="opt" type="button"><span class="ic">⚙️</span>출력<em></em></button>
+    </nav>
+    <div class="sbody">
+      <div class="pg on" data-pg="dlg">
+        <div class="sec">
+          <h3>대사 꾸미기 (전체 한 번에)</h3>
+          <select id="gmode" aria-label="대사 꾸미기 전체"></select>
+          <p class="hint">아래 등장인물마다 따로 바꿀 수도 있어요.</p>
+        </div>
+        <div class="sec">
+          <h3>등장인물</h3>
+          <div id="chars"><div class="empty">이름 | "대사" 또는 "대사" 줄을 찾으면 여기에 나와요.</div></div>
+        </div>
+      </div>
 
-  <section class="menu">
-    <h2>상태창 디자인</h2>
-    <div class="tplrow"><select id="tpl" aria-label="상태창 디자인"></select><span class="tplinfo" id="tplinfo"></span></div>
-    <h2>대사 꾸미기 (전체 한 번에)</h2>
-    <div class="tplrow"><select id="gmode" aria-label="대사 꾸미기 전체"></select><span class="tplinfo">아래 등장인물마다 따로 바꿀 수도 있어요.</span></div>
-    <h2>등장인물 옵션</h2>
-    <div class="chars" id="chars"><div class="empty">변환하기를 누르면 등장인물이 여기에 나타나요.</div></div>
-  </section>
+      <div class="pg" data-pg="chat">
+        <div class="sec">
+          <h3>말풍선</h3>
+          <div id="speakers"><div class="empty">```text 로 감싼 채팅을 찾으면 여기에 나와요.</div></div>
+        </div>
+        <div class="sec">
+          <h3>감지된 채팅</h3>
+          <div id="groups"><div class="empty">채팅을 찾으면 이름·시간을 여기서 고칠 수 있어요.</div></div>
+          <p class="hint">빨간 칸은 이름을 못 찾은 곳이에요. 직접 써넣어 주세요.</p>
+        </div>
+        <div class="sec">
+          <details class="add">
+            <summary>채팅 직접 추가하기</summary>
+            <div class="row" style="margin-top:0">
+              <input type="text" id="m-name" placeholder="이름 (예: 똥개🐶)">
+              <input type="text" id="m-time" placeholder="시간 (예: 오후 3:15)">
+            </div>
+            <textarea id="m-msgs" placeholder="메시지를 한 줄에 하나씩 써주세요"></textarea>
+            <button class="btn pri sm" id="m-add" type="button">변환 전 칸 커서 자리에 넣기</button>
+          </details>
+        </div>
+        <div class="sec">
+          <h3>알아보는 모양</h3>
+          <p class="hint" style="margin-top:0;white-space:pre-line">```text
+[똥개🐶] (오후 3:15)
+메시지 한 줄
+또 한 줄
+```
+또는 「이름: 메시지」 한 줄씩 써도 돼요.</p>
+        </div>
+      </div>
 
-  <section class="grid">
-    <div class="pane s"><h2>변환 전</h2><textarea id="src" placeholder="변환할 텍스트를 붙여넣으세요"></textarea></div>
-    <div class="actions">
-      <button id="go" type="button">변환하기</button>
-      <button id="cp" type="button">복사</button>
+      <div class="pg" data-pg="st">
+        <div class="sec">
+          <h3>상태창 디자인</h3>
+          <select id="tpl" aria-label="상태창 디자인"></select>
+          <p class="hint" id="tplinfo">변환하면 찾은 상태창 태그가 여기 표시돼요.</p>
+        </div>
+      </div>
+
+      <div class="pg" data-pg="opt">
+        <div class="sec">
+          <h3>채팅 말풍선</h3>
+          <label class="chk"><input type="checkbox" id="o-time"> 시간 표시</label>
+          <label class="chk"><input type="checkbox" id="o-compact"> 한 줄로 압축 (줄바꿈이 깨질 때)</label>
+          <div class="row">
+            <label class="lbl">글자 크기
+              <select id="o-fs"><option value="12">12px</option><option value="13">13px</option><option value="14">14px</option><option value="15">15px</option><option value="16">16px</option></select></label>
+            <label class="lbl">최대 너비 <span id="maxw-v"></span>
+              <input type="range" id="o-maxw" min="50" max="95" step="5"></label>
+          </div>
+        </div>
+        <div class="sec">
+          <h3>변환</h3>
+          <label class="chk"><input type="checkbox" id="o-auto"> 붙여넣으면 바로 변환</label>
+          <p class="hint">끄면 변환하기 버튼(또는 Ctrl+Enter)을 눌러야 바뀌어요.</p>
+        </div>
+      </div>
     </div>
-    <div class="pane r"><h2>변환 후</h2><div class="out" id="out" data-ph="변환 결과가 여기에 표시돼요"></div></div>
-  </section>
+  </aside>
+
+  <main class="main">
+    <div class="bar">
+      <div class="found" id="found">글을 붙여넣고 변환해 보세요.</div>
+      <div class="btns">
+        <button class="btn pri" id="go" type="button">변환하기</button>
+        <button class="btn" id="cp" type="button">복사</button>
+      </div>
+    </div>
+    <div class="panes">
+      <section class="pane">
+        <div class="ph"><b>변환 전</b>
+          <div class="btns"><button class="btn sm" id="sample" type="button">예시 넣기</button><button class="btn sm" id="clear" type="button">비우기</button></div></div>
+        <textarea id="src" placeholder="변환할 텍스트를 붙여넣으세요"></textarea>
+      </section>
+      <section class="pane">
+        <div class="ph"><b>변환 후</b>
+          <div class="btns">
+            <span class="segm" id="view"><button type="button" data-v="pv" class="on">미리보기</button><button type="button" data-v="code">코드</button></span>
+            <span class="segm" id="theme"><button type="button" data-t="dark" class="on">어둡게</button><button type="button" data-t="light">밝게</button></span>
+          </div></div>
+        <div class="out dark" id="out"></div>
+        <textarea id="code" readonly hidden></textarea>
+      </section>
+    </div>
+  </main>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
 const PAL=['#ffb07c','#9ec5fe','#b8e6c9','#d7b8f5','#ffc6d9','#f6dd8f'];
 const NONAME='__noname__';
 let blocks=[],chars=new Map(),raw='',force='auto';
+let gmode=store.get('tc-gmode','colorbold');
+const savedChars=store.get('tc-chars',{});
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const E=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#039;').replace(/"/g,'&quot;');
 
@@ -123,18 +264,132 @@ function extractStatus(src){
   return{src:out+src.slice(last),sts};
 }
 
-/* ───────── 본문 읽기 ───────── */
+/* ───────── 채팅 말풍선 ───────── */
+const SW=['#fee500','#ffffff','#e9e9eb','#4f6fc4','#6b86d1','#3a55a8','#bfe0f7','#f7c6d9','#ffb3c1','#d9c7f5','#c9e7a7','#2c2c2e'];
+const DEF=[{side:'L',bg:'#fee500'},{side:'R',bg:'#3a55a8'},{side:'L',bg:'#ffffff'},{side:'L',bg:'#f7c6d9'},{side:'L',bg:'#c9e7a7'},{side:'L',bg:'#bfe0f7'}];
+const PRESET={'똥개🐶':{side:'L',bg:'#fee500',fg:'#191919',fgManual:false,showName:true},'할망구':{side:'R',bg:'#3a55a8',fg:'#ffffff',fgManual:false,showName:true}};
+const CHAT_LANGS=['','text','txt','chat','kakao','talk'];
+const savedSpk=store.get('ckt-speakers',null)||JSON.parse(JSON.stringify(PRESET));
+const spk=JSON.parse(JSON.stringify(savedSpk));
+const copt=Object.assign({showTime:true,compact:false,fs:'14',maxw:'75',auto:true},store.get('ckt-opts',{}));
+const overrides={};
+let lastSpkSig=null,lastGrpSig=null,lastCharSig=null;
+
+function autoFg(hex){
+  const h=hex.replace('#','');
+  const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  return (0.299*r+0.587*g+0.114*b)/255>0.62?'#191919':'#ffffff';
+}
+function ensureSpeaker(n,i){
+  if(!spk[n]){const d=DEF[i%DEF.length];spk[n]={side:d.side,bg:d.bg,fg:autoFg(d.bg),fgManual:false,showName:true};}
+}
+function saveSpeaker(n){savedSpk[n]=spk[n];store.set('ckt-speakers',savedSpk);}
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36);}
+
+const TIME_RE=/^[\(\[]\s*([^\)\]]{0,8}\d{1,2}:\d{2}[^\)\]]{0,6})\s*[\)\]]\s*(.*)$/;
+function matchHead(l){
+  const m=l.match(/^\[([^\]]{1,30})\]\s*(.*)$/);
+  if(!m)return null;
+  let time='',rest=m[2];
+  const t=rest.match(TIME_RE);
+  if(t){time=t[1].trim();rest=t[2];}
+  return {name:m[1].trim(),time,rest:rest.trim()};
+}
+function matchColon(l){
+  let m=l.match(/^([^:：\[\]\(\)]{1,20}?)\s*\(([^)]{0,8}\d{1,2}:\d{2}[^)]{0,6})\)\s*[:：]\s*(.+)$/);
+  if(m)return {name:m[1].trim(),time:m[2].trim(),msg:m[3].trim()};
+  m=l.match(/^([^:：\[\]\(\)]{1,20}?)\s*[:：]\s*(.+)$/);
+  if(m&&!/\d$/.test(m[1].trim()))return {name:m[1].trim(),time:'',msg:m[2].trim()};
+  return null;
+}
+function parseChat(lines){
+  const clean=lines.map(l=>l.trim()).filter(Boolean);
+  const hasHead=clean.some(l=>matchHead(l));
+  const hasColon=!hasHead&&clean.some(l=>matchColon(l));
+  const groups=[];let cur=null;
+  for(const l of clean){
+    if(hasHead){
+      const h=matchHead(l);
+      if(h){cur={name:h.name,time:h.time,msgs:[]};groups.push(cur);if(h.rest)cur.msgs.push(h.rest);continue;}
+    }else if(hasColon){
+      const c=matchColon(l);
+      if(c){
+        if(!cur||cur.name!==c.name||(c.time&&cur.time&&c.time!==cur.time)){cur={name:c.name,time:c.time,msgs:[]};groups.push(cur);}
+        else if(c.time)cur.time=c.time;
+        cur.msgs.push(c.msg);continue;
+      }
+    }
+    if(!cur){cur={name:'',time:'',msgs:[]};groups.push(cur);}
+    cur.msgs.push(l);
+  }
+  return {groups:groups.filter(g=>g.msgs.length),recognized:hasHead||hasColon};
+}
+function baseCss(){
+  return ".ckt{margin:14px 0;padding:0 8px;text-align:left;font-family:'Pretendard Variable',Pretendard,'맑은 고딕','Malgun Gothic',sans-serif;line-height:1.5}"
+  +".ckt-g{margin:10px 0 0}.ckt-g:first-child,.ckt-g.c{margin-top:0}.ckt-L{text-align:left}.ckt-R{text-align:right}"
+  +".ckt-n{font-size:12px;color:inherit;opacity:.65;margin:0 0 5px}"
+  +".ckt-r{display:flex;align-items:flex-end;gap:5px;margin:0 0 4px}.ckt-L .ckt-r{justify-content:flex-start}.ckt-R .ckt-r{justify-content:flex-end}"
+  +".ckt-t{font-size:10px;color:inherit;opacity:.55;white-space:nowrap;flex-shrink:0}"
+  +".ckt-b{position:relative;max-width:"+copt.maxw+"%;padding:8px 11px;font-size:"+copt.fs+"px;line-height:1.5;border-radius:12px;text-align:left;word-break:keep-all;overflow-wrap:break-word}"
+  +".ckt-L .ckt-b.f{border-top-left-radius:0}.ckt-R .ckt-b.f{border-top-right-radius:0}"
+  +".ckt-b.f::before{content:'';position:absolute;top:0;width:0;height:0;border-top:9px solid transparent}"
+  +".ckt-L .ckt-b.f::before{left:-7px;border-left:8px solid transparent}.ckt-R .ckt-b.f::before{right:-7px;border-right:8px solid transparent}";
+}
+function buildChat(groups){
+  const used={};const lines=[];let prev=null;
+  groups.forEach(g=>{
+    const c=spk[g.name];
+    const cls='k'+hash(c.bg+c.fg);
+    used[cls]=c;
+    const side=c.side;
+    const cont=prev&&prev.name===g.name&&prev.side===side;
+    lines.push('<div class="ckt-g ckt-'+side+' '+cls+(cont?' c':'')+'">');
+    if(c.showName&&!cont&&g.name)lines.push('<div class="ckt-n">'+E(g.name)+'</div>');
+    g.msgs.forEach((m,mi)=>{
+      const b='<div class="ckt-b'+(mi===0&&!cont?' f':'')+'">'+E(m)+'</div>';
+      const t=(mi===g.msgs.length-1&&copt.showTime&&g.time)?'<span class="ckt-t">'+E(g.time)+'</span>':'';
+      lines.push('<div class="ckt-r">'+(side==='R'?t+b:b+t)+'</div>');
+    });
+    lines.push('</div>');
+    prev={name:g.name,side};
+  });
+  let css=baseCss();
+  Object.keys(used).forEach(k=>{const c=used[k];css+='.ckt .'+k+' .ckt-b{background:'+c.bg+';color:'+c.fg+'}.ckt .'+k+' .ckt-b.f::before{border-top-color:'+c.bg+'}';});
+  const sep=copt.compact?'':'\n';
+  return '<style>'+css+'</style>'+sep+'<div class="ckt">'+sep+lines.join(sep)+sep+'</div>';
+}
+
+/* ───────── 본문 읽기 (상태창 · 기존 [html] · 채팅 · 대사) ───────── */
+// 이미 붙어 있는 색·굵기 꾸밈은 벗기고 새로 입힘
+const undeco=s=>s.replace(/\{\{#[0-9A-Fa-f]{3,8}:([\s\S]*?)\}\}/g,'$1').replace(/\*\*(\s*["“「『][^\n]*?["”」』]\s*)\*\*/g,'$1');
 function parse(src){
   const ex=extractStatus(src.replace(/\r/g,''));
   src=ex.src.replace(/<br\s*\/?>\s*(?=\()/gi,'\n');
   const L=src.split('\n'),out=[];
-  // (괄호) 번역 줄은 건드리지 않고 원문 그대로 둠
   const grabTr=i=>({tr:null,i});
   for(let i=0;i<L.length;i++){
     let l=L[i];
     const sm=l.trim().match(/^@@STATUS(\d+)@@$/);
     if(sm){out.push({t:'st',s:ex.sts[+sm[1]]});continue}
+    // 이미 변환된 [html] 블록은 그대로 둠
+    if(/^\s*\[html\]/i.test(l)){
+      let j=i;while(j<L.length&&!/\[\/html\]/i.test(L[j]))j++;
+      if(j<L.length){for(let k=i;k<=j;k++)out.push({t:'x',s:L[k]});i=j;continue}
+    }
+    // ```text 채팅 블록
+    const fm=l.match(/^\s*```\s*([A-Za-z0-9_-]*)\s*$/);
+    if(fm){
+      let j=i+1;while(j<L.length&&!/^\s*```\s*$/.test(L[j]))j++;
+      if(j<L.length){
+        const lang=fm[1].toLowerCase();
+        const r=CHAT_LANGS.includes(lang)?parseChat(L.slice(i+1,j)):null;
+        if(r&&r.groups.length&&(lang!==''||r.recognized))out.push({t:'chat',groups:r.groups});
+        else for(let k=i;k<=j;k++)out.push({t:'x',s:L[k]});
+        i=j;continue;
+      }
+    }
     if(/\{\{img::[^}]*\}\}/.test(l)){l=l.replace(/\{\{img::[^}]*\}\}/g,'');if(!l.trim())continue}
+    if(/[|｜│]\s*(\{\{#|\*\*)|^\s*(\{\{#[0-9A-Fa-f]{3,8}:)?\s*\*\*\s*["“「『]/.test(l))l=undeco(l);
     // 이름 | "대사"  (이름에 ** 가 붙어 있어도 인식)
     const m=l.match(/^\s*(?:\*\*)?([^|｜│*"“”「『\n]{1,30}?)(?:\*\*)?\s*[|｜│]\s*(.*["“「『].*)$/);
     if(m){
@@ -404,16 +659,38 @@ function renderStatus(s){
   return TPL[k](s.a);
 }
 
+/* ───────── 그리기 ───────── */
 function render(){
+  const chats=[];let n=0;
+  blocks.forEach(x=>{
+    if(x.t!=='chat')return;
+    x.b=n++;
+    x.eff=x.groups.map((g,gi)=>{const key=x.b+':'+gi,o=overrides[key]||{};
+      return{key,name:o.name!==undefined?o.name:g.name,time:o.time!==undefined?o.time:g.time,msgs:g.msgs}});
+    chats.push(x);
+  });
+  const names=[];
+  chats.forEach(x=>x.eff.forEach(g=>{if(!names.includes(g.name))names.push(g.name)}));
+  names.forEach((nm,i)=>ensureSpeaker(nm,i));
+  const ss=names.join('\u0001');if(ss!==lastSpkSig){lastSpkSig=ss;renderSpeakers(names)}
+  const gs=chats.map(x=>x.groups.map(g=>g.name+'|'+g.time+'|'+g.msgs.join('\u0002')).join(';')).join('#');
+  if(gs!==lastGrpSig){lastGrpSig=gs;renderGroups(chats)}
   raw=blocks.map(b=>{
     if(b.t==='x')return b.s;
     if(b.t==='st')return b.s?renderStatus(b.s):'';
+    if(b.t==='chat')return '[html]\n'+buildChat(b.eff)+'\n[/html]';
     const c=chars.get(b.n);
     const line=paintQ(b.l,c),nm=c.label||b.n;
     const head=b.n===NONAME?line:`${c.nc?`{{${c.color}:${nm}}}`:nm} | ${line}`;
     return head+(b.tr!==null?`\n{{${c.size}:{{${c.color}:**${b.tr}**}}}}`:'');
   }).join('\n').trim();
-  $('out').innerHTML=preview(raw);
+  $('out').innerHTML=raw?preview(raw):'';
+  $('code').value=raw;
+  const st=blocks.filter(b=>b.t==='st').length,dl=chars.size;
+  $('bd-dlg').textContent=dl?dl+'명':'';
+  $('bd-chat').textContent=chats.length?chats.length+'개':'';
+  $('bd-st').textContent=st?st+'개':'';
+  $('found').innerHTML=raw?`상태창 <b>${st}</b> · 대사 인물 <b>${dl}</b> · 채팅 <b>${chats.length}</b>`:'글을 붙여넣고 변환해 보세요.';
 }
 
 // 대사 꾸미기 종류
@@ -425,13 +702,11 @@ function deco(m,c){
   if(c.mode==='colorbold')return `{{${c.color}:**${m}**}}`;
   return m;
 }
-// "대사" 부분에만 꾸미기 (따옴표가 안 닫혀 있으면 줄 전체)
 function paintQ(s,c){
   if(!c.mode||c.mode==='none')return s;
   const re=/"[^"\n]*"|“[^”\n]*”|「[^」\n]*」|『[^』\n]*』/g;
   return re.test(s)?s.replace(re,m=>deco(m,c)):deco(s,c);
 }
-
 function preview(t){
   return t.split(/(\[html\][\s\S]*?\[\/html\])/).map(p=>{
     if(/^\[html\]/.test(p))return '<div class="hb">'+p.slice(6,-7)+'</div>';
@@ -440,14 +715,15 @@ function preview(t){
   }).join('');
 }
 
+/* 대사 등장인물 카드 */
 function buildOptions(){
   const box=$('chars'),keys=[...chars.keys()];
   box.innerHTML='';
   if(!keys.length){box.innerHTML='<div class="empty">등장인물을 찾지 못했어요. 이름 | "대사" 또는 "대사" 형식인지 확인해 주세요.</div>';return}
   keys.forEach((k,i)=>{
     const c=chars.get(k),d=document.createElement('div');
-    d.className='char';d.dataset.i=i;d.style.animationDelay=(i*60)+'ms';
-    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label>색<input type="color" class="f-color"></label></div><div class="row"><label>"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div><div class="tip" style="color:var(--sub);margin-top:4px">따옴표 안 "대사"에만 적용돼요. (괄호) 줄은 그대로 둬요.</div>';
+    d.className='char';d.dataset.k=k;d.style.animationDelay=(i*50)+'ms';
+    d.innerHTML='<div class="cn"></div><input type="text" class="f-name" aria-label="이름"><div class="row"><label class="lbl">색<input type="color" class="f-color"></label></div><div class="row"><label class="lbl">"대사" 꾸미기<select class="f-mode">'+MODE_OPTS+'</select></label><label class="lbl w-nc">이름 색<select class="f-nc"><option value="0">기본</option><option value="1">이 색으로</option></select></label></div><div class="pv"><span class="pv-n"></span><span class="pv-sep"> | </span><span class="pv-t">"미리보기"</span></div>';
     const nm=d.querySelector('.f-name');
     if(k===NONAME){d.querySelector('.cn').textContent='이름 없는 대사 ("대사"만 있는 줄)';['.f-name','.w-nc','.pv-n','.pv-sep'].forEach(s=>d.querySelector(s).style.display='none')}
     else{d.querySelector('.cn').textContent='원본 이름 · '+k;nm.value=c.label}
@@ -461,65 +737,154 @@ function paint(d,c){
   const t=d.querySelector('.pv-t'),n=d.querySelector('.pv-n');
   t.style.color=c.mode==='color'||c.mode==='colorbold'?c.color:'var(--ink)';
   t.style.fontWeight=c.mode==='bold'||c.mode==='colorbold'?'700':'400';
-  n.textContent=c.label;n.style.color=c.nc?c.color:'var(--ink)';n.style.fontWeight='400';
-  d.querySelector('.pv-sep').style.fontWeight='400';
+  n.textContent=c.label;n.style.color=c.nc?c.color:'var(--ink)';
 }
-
 const onOpt=e=>{
   const d=e.target.closest('.char');if(!d)return;
-  const c=chars.get([...chars.keys()][d.dataset.i]);
+  const k=d.dataset.k,c=chars.get(k);
   c.label=d.querySelector('.f-name').value;
   c.color=d.querySelector('.f-color').value.toLowerCase();
   c.mode=d.querySelector('.f-mode').value;
   c.nc=d.querySelector('.f-nc').value==='1';
+  savedChars[k]=c;store.set('tc-chars',savedChars);
   paint(d,c);render();
 };
 $('chars').addEventListener('input',onOpt);
 $('chars').addEventListener('change',onOpt);
 
-// 상태창 디자인 선택
+/* 채팅 말풍선 카드 */
+function renderSpeakers(names){
+  const box=$('speakers');
+  if(!names.length){box.innerHTML='<div class="empty">```text 로 감싼 채팅을 찾으면 여기에 나와요.</div>';return;}
+  box.innerHTML='';
+  names.forEach(n=>{
+    const c=spk[n];
+    const el=document.createElement('div');el.className='spk';
+    el.innerHTML='<div class="spk-top"><b></b><span class="segm"><button type="button" data-side="L">왼쪽</button><button type="button" data-side="R">오른쪽</button></span></div>'
+      +'<div class="row" style="margin-top:0"><label class="lbl">말풍선<input type="color" class="bg"></label><label class="lbl">글자<input type="color" class="fg"></label></div>'
+      +'<div class="sw">'+SW.map(x=>'<button type="button" style="background:'+x+'" data-c="'+x+'" title="'+x+'"></button>').join('')+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><label class="chk"><input type="checkbox" class="sn"> 이름 표시</label><span class="bub">미리보기</span></div>';
+    el.querySelector('b').textContent=n||'(이름 없음)';
+    const bg=el.querySelector('.bg'),fg=el.querySelector('.fg'),sn=el.querySelector('.sn'),bub=el.querySelector('.bub');
+    const sync=()=>{
+      el.querySelectorAll('.segm button').forEach(x=>x.classList.toggle('on',x.dataset.side===c.side));
+      bg.value=c.bg;fg.value=c.fg;sn.checked=c.showName;
+      bub.style.background=c.bg;bub.style.color=c.fg;bub.className='bub '+c.side;
+    };
+    const changed=()=>{saveSpeaker(n);sync();render();};
+    el.querySelectorAll('.segm button').forEach(x=>x.onclick=()=>{c.side=x.dataset.side;changed();});
+    el.querySelectorAll('.sw button').forEach(x=>x.onclick=()=>{c.bg=x.dataset.c;c.fg=autoFg(c.bg);c.fgManual=false;changed();});
+    bg.oninput=()=>{c.bg=bg.value;if(!c.fgManual)c.fg=autoFg(c.bg);changed();};
+    fg.oninput=()=>{c.fg=fg.value;c.fgManual=true;changed();};
+    sn.onchange=()=>{c.showName=sn.checked;changed();};
+    sync();box.appendChild(el);
+  });
+}
+function renderGroups(chats){
+  const box=$('groups');
+  if(!chats.length){box.innerHTML='<div class="empty">채팅을 찾으면 이름·시간을 여기서 고칠 수 있어요.</div>';return;}
+  box.innerHTML='';
+  chats.forEach(x=>{
+    const h=document.createElement('div');h.className='g-head';h.textContent='채팅 '+(x.b+1);box.appendChild(h);
+    x.eff.forEach(g=>{
+      const row=document.createElement('div');row.className='g-row';
+      row.innerHTML='<input type="text" class="gn" placeholder="이름을 넣어주세요"><input type="text" class="gt" placeholder="시간 (예: 오후 3:12)"><span class="snip"></span>';
+      const gn=row.querySelector('.gn'),gt=row.querySelector('.gt');
+      gn.value=g.name;gt.value=g.time;
+      row.querySelector('.snip').textContent=g.msgs.length+'개 · '+g.msgs[0];
+      row.classList.toggle('need',!g.name);
+      const upd=()=>{overrides[g.key]={name:gn.value.trim(),time:gt.value.trim()};row.classList.toggle('need',!gn.value.trim());render();};
+      gn.oninput=upd;gt.oninput=upd;
+      box.appendChild(row);
+    });
+  });
+}
+
+/* ───────── 변환 ───────── */
+function convert(){
+  const src=$('src').value;
+  store.set('tc-src',src);
+  blocks=src.trim()?parse(src):[];
+  const next=new Map();let i=0;
+  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||(savedChars[b.n]?Object.assign({},savedChars[b.n]):{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:gmode,nc:false}));i++}});
+  chars=next;
+  const cs=[...chars.keys()].join('\u0001');
+  if(cs!==lastCharSig){lastCharSig=cs;buildOptions();}
+  const f=[...new Set(blocks.filter(b=>b.t==='st').map(b=>b.s.tag))];
+  $('tplinfo').textContent=f.length?'찾은 상태창: '+f.join(', '):'상태창 태그를 찾지 못했어요.';
+  render();
+}
+
+/* ───────── 옆 도구 ───────── */
+document.querySelectorAll('.stab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.stab').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.dataset.pg===b.dataset.tab));
+});
 (()=>{
   const sel=$('tpl');
   sel.innerHTML='<option value="auto">자동 (태그 이름대로)</option>'+Object.keys(TPL).map(k=>`<option value="${k}">${k}</option>`).join('');
   sel.addEventListener('change',()=>{force=sel.value;if(blocks.length)render()});
 })();
-// 대사 꾸미기 전체 설정
-let gmode='colorbold';
 (()=>{
   const sel=$('gmode');
   sel.innerHTML=MODE_OPTS;sel.value=gmode;
   sel.addEventListener('change',()=>{
-    gmode=sel.value;chars.forEach(c=>c.mode=gmode);
-    if(chars.size)buildOptions();
-    if(blocks.length)render();
+    gmode=sel.value;store.set('tc-gmode',gmode);
+    chars.forEach((c,k)=>{c.mode=gmode;savedChars[k]=c;});
+    Object.keys(savedChars).forEach(k=>savedChars[k].mode=gmode);
+    store.set('tc-chars',savedChars);
+    lastCharSig=null;convert();
   });
 })();
-function showFound(){
-  const f=[...new Set(blocks.filter(b=>b.t==='st').map(b=>b.s.tag))];
-  $('tplinfo').textContent=f.length?'찾은 상태창: '+f.join(', '):'상태창 태그를 찾지 못했어요.';
-}
+[['o-time','showTime','checked'],['o-compact','compact','checked'],['o-fs','fs','value'],['o-maxw','maxw','value'],['o-auto','auto','checked']].forEach(([id,k,prop])=>{
+  const el=$(id);el[prop]=copt[k];
+  const on=()=>{copt[k]=el[prop];store.set('ckt-opts',copt);$('maxw-v').textContent=copt.maxw+'%';if(k!=='auto'&&blocks.length)render();};
+  el.addEventListener('input',on);el.addEventListener('change',on);
+});
+$('maxw-v').textContent=copt.maxw+'%';
 
+/* ───────── 오른쪽 화면 ───────── */
+$('view').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('view').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  const code=b.dataset.v==='code';
+  $('code').hidden=!code;$('out').hidden=code;
+});
+$('theme').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('theme').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  $('out').className='out '+b.dataset.t;
+});
 function flash(btn,text){
   const o=btn.dataset.o||(btn.dataset.o=btn.textContent);
   btn.textContent=text;btn.classList.add('done');
   clearTimeout(btn._t);
-  btn._t=setTimeout(()=>{btn.textContent=o;btn.classList.remove('done')},1800);
+  btn._t=setTimeout(()=>{btn.textContent=o;btn.classList.remove('done')},1600);
 }
-
-$('go').addEventListener('click',()=>{
-  const src=$('src').value;if(!src.trim())return;
-  blocks=parse(src);
-  const next=new Map();let i=0;
-  blocks.forEach(b=>{if(b.t==='d'&&!next.has(b.n)){next.set(b.n,chars.get(b.n)||{label:b.n===NONAME?'':b.n,color:PAL[i%PAL.length],size:12,mode:gmode,nc:false});i++}});
-  chars=next;buildOptions();showFound();render();
-  flash($('go'),'완료 ✓');
-});
-
+$('go').addEventListener('click',()=>{convert();flash($('go'),'완료 ✓')});
 $('cp').addEventListener('click',async()=>{
   if(!raw)return;
   try{await navigator.clipboard.writeText(raw)}catch(e){const t=document.createElement('textarea');t.value=raw;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
   flash($('cp'),'복사됨 ✓');
 });
+let deb;
+$('src').addEventListener('input',()=>{if(!copt.auto)return;clearTimeout(deb);deb=setTimeout(convert,450)});
+$('src').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();convert();flash($('go'),'완료 ✓')}});
+$('clear').onclick=()=>{$('src').value='';convert();};
+const SAMPLE=['휴게실 소파에 앉아 있던 스트레이가 진동하는 단말기를 확인했다.','','```text','[할망구] (오후 3:12)','케이야, 바지 사이즈 몇이야?','```','','"쿨럭, 컥...!"','','레이 | "다정아, 왜 그래? 표정이 갑자기 엄청 즐거워 보이는데."','','```text','[똥개🐶] (오후 3:15)','갑자기 그건 왜 물어봐','허리는 32 입는다...','```'].join('\n');
+$('sample').onclick=()=>{$('src').value=SAMPLE;convert();};
+$('m-add').onclick=()=>{
+  const name=$('m-name').value.trim(),time=$('m-time').value.trim();
+  const msgs=$('m-msgs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  if(!name){$('m-name').focus();$('m-name').placeholder='이름을 먼저 써주세요!';return;}
+  if(!msgs.length){$('m-msgs').focus();return;}
+  const block='```text\n['+name+']'+(time?' ('+time+')':'')+'\n'+msgs.join('\n')+'\n```';
+  const ta=$('src'),pos=ta.selectionStart??ta.value.length,v=ta.value;
+  const before=v.slice(0,pos),after=v.slice(pos);
+  ta.value=before+(before&&!before.endsWith('\n\n')?(before.endsWith('\n')?'\n':'\n\n'):'')+block+(after&&!after.startsWith('\n')?'\n\n':'')+after;
+  $('m-msgs').value='';convert();
+};
+
+$('src').value=store.get('tc-src','');
+convert();
 </script>
 </body>
 </html>

@@ -587,8 +587,8 @@ const SN_CFG={
 `};
 
 const AMD_CFG={
-  p:'amd',NPC:'RAYMOND',PC:'DARIA',icon:'🐯',title:'#AMOND — RAYMOND x DARIA',nsfw:true,climax:false,tr:true,
-  tabs:[['status','STATUS'],['community','COM'],['interview','INT']],
+  p:'amd',NPC:'RAYMOND',PC:'DARIA',icon:'🐯',title:'',nsfw:true,climax:false,tr:true,headEmo:true,
+  tabs:[['status','STATUS'],['interview','INT']],
   on:'background:var(--red);border-color:var(--red);color:var(--ink);padding:7px 2px',
   chips:a=>[['🖤',withPct(a.affection)],['🦊',String(a.relation||'').trim()||'-'],['💕',dPlus(a.daysTogether)]],
   css:`@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
@@ -596,20 +596,15 @@ const AMD_CFG={
 .amd *{box-sizing:border-box}
 .amd-sum{display:block;width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;user-select:none;font-family:inherit;text-align:left}
 .amd-head{background:linear-gradient(165deg,#1c1013 0%,#0d0809 75%);padding:14px 18px;border-radius:3px;width:100%}
-.amd-htop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.amd-title{display:inline-block;background:var(--red);color:var(--ink);font-weight:800;font-size:12px;letter-spacing:1px;padding:5px 12px;border-radius:4px;margin-bottom:10px}
-.amd-arrow{font-size:9px;color:var(--mute);padding-top:7px;flex-shrink:0}
+.amd-htop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.amd-htop:last-child{margin-bottom:0}
+.amd-arrow{font-size:9px;color:var(--mute);flex-shrink:0}
 .amd-meta{font-size:11px;font-weight:bold;color:var(--txt);letter-spacing:-.2px;margin-bottom:4px}
 .amd-meta:last-child{margin-bottom:0}
 .amd-body{background:var(--bg);border-radius:0 0 3px 3px;overflow:hidden;border:1px solid var(--line);border-top:4px solid var(--red);margin-top:0}
 .amd-inner{background:var(--bg2);padding:18px 14px;display:flex;flex-direction:column;gap:14px}
 .amd-chips{display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
 .amd-chip{background:var(--chip);padding:4px 8px;border-radius:2px;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);color:var(--ink2);font-weight:bold;font-size:11px}
-.amd-row{display:flex;gap:8px}
-.amd-who{flex:1;min-width:0;border:1px solid var(--line);border-top:2px solid var(--red);padding:10px;background:var(--card);border-radius:2px;font-size:11px;color:var(--txt);display:flex;flex-direction:column;gap:6px}
-.amd-who.pc{border-top-color:var(--ink2)}
-.amd-who-n{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-weight:bold;color:var(--ink2);border-bottom:1px solid var(--line);padding-bottom:4px}
-.amd-k{color:var(--mute);font-weight:bold;display:block}
 .amd-tabs{display:flex;gap:3px;align-items:flex-end}
 .amd-tab{flex:1 1 0;min-width:0;border:1px solid var(--line);border-bottom:0;background:var(--chip);color:var(--mute);font-family:inherit;font-weight:800;font-size:9px;letter-spacing:.8px;padding:5px 2px;border-radius:3px 3px 0 0;cursor:pointer;line-height:1.2}
 .amd-tabline{height:2px;background:var(--red)}
@@ -619,25 +614,17 @@ const AMD_CFG={
 .amd-mind{font-size:11px;color:var(--ink2);line-height:1.5;background:var(--bg2);padding:10px;border:1px solid var(--line);border-radius:2px;border-left:3px solid var(--red);white-space:pre-wrap}
 .amd-num{display:flex;gap:8px;padding:1px 0;white-space:normal}
 .amd-num b{color:var(--red);flex-shrink:0}
-.amd-emo{display:flex;align-items:center;gap:6px}
-.amd-emo div{flex:1;min-width:0;overflow-wrap:anywhere;font-family:sans-serif;font-weight:bold;font-size:11px;text-align:center;padding:8px 6px;border-radius:2px}
+.amd-emo{display:flex;align-items:center;gap:5px;min-width:0}
+.amd-emo div{flex:0 1 auto;min-width:0;max-width:160px;overflow-wrap:anywhere;font-family:sans-serif;font-weight:bold;font-size:10.5px;line-height:1.3;text-align:center;padding:4px 9px;border-radius:2px}
 .amd-emo .c{background:var(--red);color:var(--ink)}
 .amd-emo .u{background:var(--ink);color:var(--dark)}
-.amd-emo span{font-size:13px;color:var(--red);flex-shrink:0}
-.amd-kv{display:flex;justify-content:space-between;gap:10px}
-.amd-kv span:first-child{color:var(--ink);font-weight:bold;flex-shrink:0}
-.amd-kv span:last-child{color:var(--ink2);text-align:right}
+.amd-emo span{font-size:11px;color:var(--red);flex-shrink:0}
 .amd-sex{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;row-gap:2px;width:100%;text-align:right;line-height:1.7;color:var(--ink2)}
 .amd-dot{margin:0 6px;color:var(--mute)}
 .amd-sex i{font-style:normal;color:var(--mute);font-size:9.5px;font-weight:700;letter-spacing:.5px;margin-right:4px}
 .amd-pill{font-weight:800;font-size:10px;padding:1px 7px;border:1px solid var(--line);color:var(--mute);border-radius:2px}
 .amd-pill.on{border-color:var(--red);color:var(--ink);background:rgba(196,24,12,.25)}
 .amd-lust{color:var(--red);font-weight:900}
-.amd-badge{display:inline-block;align-self:flex-start;background:var(--red);color:var(--ink);font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:2px}
-.amd-comm-t{font-weight:800;font-size:13px;line-height:1.5;color:var(--ink)}
-.amd-cmt{border-top:1px dashed var(--line);padding-top:8px}
-.amd-cmt-h{font-size:9.5px;color:var(--red);font-weight:700;margin-bottom:2px}
-.amd-cmt-b{color:var(--txt);line-height:1.5}
 .amd-q{color:var(--mute)}
 .amd-q b,.amd-a b{color:var(--red);margin-right:6px}
 .amd-a{font-size:12px;color:var(--ink2);font-weight:600;line-height:1.6}

@@ -404,7 +404,11 @@ function buildChat(groups){
 const undeco=s=>s.replace(/\{\{#[0-9A-Fa-f]{3,8}:([\s\S]*?)\}\}/g,'$1').replace(/\*\*(\s*["“「『][^\n]*?["”」』]\s*)\*\*/g,'$1');
 function parse(src){
   const ex=extractStatus(src.replace(/\r/g,''));
-  src=ex.src.replace(/<br\s*\/?>\s*(?=\()/gi,'\n');
+  // <br> 태그 빼기 ([html] 블록 안은 그대로): 줄 앞뒤 <br>은 지우고, 줄 가운데 <br>은 줄바꿈으로
+  src=ex.src.split(/(\[html\][\s\S]*?\[\/html\])/i).map(part=>/^\[html\]/i.test(part)?part:part
+    .replace(/^[ \t]*(?:<br\s*\/?>[ \t]*)+/gim,'')
+    .replace(/(?:[ \t]*<br\s*\/?>)+[ \t]*$/gim,'')
+    .replace(/[ \t]*<br\s*\/?>[ \t]*/gi,'\n')).join('');
   const L=src.split('\n'),out=[];
   const grabTr=i=>({tr:null,i});
   for(let i=0;i<L.length;i++){

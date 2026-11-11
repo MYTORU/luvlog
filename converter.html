@@ -518,8 +518,9 @@ function boxHtml(cfg,a){
   const tabArea=tabs.map(([k],i)=>`<input type="radio" name="${id}" id="${id}-${k}" class="${p}-r r-${k}"${i?'':' checked'}>`).join('')
     +`<div class="${p}-tabs">${tabs.map(([k,l])=>`<label for="${id}-${k}" class="${p}-tab tb-${k}">${l}</label>`).join('')}</div><div class="${p}-tabline"></div>`
     +`<div class="${p}-panel">${tabs.map(([k])=>`<div class="pn pn-${k}">${P[k]}</div>`).join('')}</div>`;
-  const head=`<summary class="${p}-sum"><div class="${p}-head"><div class="${p}-htop"><div class="${p}-title">${cfg.title}</div><span class="${p}-arrow"><span class="lc">▼</span><span class="lo">▲</span></span></div>${meta?`<div class="${p}-meta">${meta}</div>`:''}${loc?`<div class="${p}-meta">${E(loc)}</div>`:''}</div></summary>`;
-  const body=`<div class="${p}-body"><div class="${p}-inner"><div class="${p}-chips">${chips}</div><div class="${p}-emo"><div class="c">${or('npcKaomoji','-')}</div>${cfg.mid||'<span>♥</span>'}<div class="u">${or('pcKaomoji','-')}</div></div><div>${tabArea}</div></div></div>`;
+  const emo=`<div class="${p}-emo"><div class="c">${or('npcKaomoji','-')}</div>${cfg.mid||'<span>♥</span>'}<div class="u">${or('pcKaomoji','-')}</div></div>`;
+  const head=`<summary class="${p}-sum"><div class="${p}-head"><div class="${p}-htop">${cfg.headEmo?emo:`<div class="${p}-title">${cfg.title}</div>`}<span class="${p}-arrow"><span class="lc">▼</span><span class="lo">▲</span></span></div>${meta?`<div class="${p}-meta">${meta}</div>`:''}${loc?`<div class="${p}-meta">${E(loc)}</div>`:''}</div></summary>`;
+  const body=`<div class="${p}-body"><div class="${p}-inner"><div class="${p}-chips">${chips}</div>${cfg.headEmo?'':emo}<div>${tabArea}</div></div></div>`;
   const common=`.${p}-det>summary{list-style:none}.${p}-det>summary::-webkit-details-marker{display:none}.${p} .lo{display:none}.${p}-det[open] .lo{display:inline}.${p}-det[open] .lc{display:none}.${p}-det[open] .${p}-head{border-radius:3px 3px 0 0}.${p}-r{display:none}.${p}-tab{display:block;text-align:center;user-select:none}.${p}-panel{display:block}.${p} .pn{display:none;flex-direction:column;gap:12px}`
     +tabs.map(([k])=>`.${p}-r.r-${k}:checked~.${p}-panel .pn-${k}{display:flex}.${p}-r.r-${k}:checked~.${p}-tabs .tb-${k}{${cfg.on}}`).join('');
   return `[html]\n<style>${cfg.css}${common}</style><div class="${p}"><details class="${p}-det">${head}${body}</details></div>\n[/html]`;
@@ -641,7 +642,7 @@ const AMD_CFG={
 `};
 
 const TDG_CFG={
-  p:'tdg',NPC:'RAYMOND',PC:'ALEX',icon:'🐯',title:'#雙犬 — RAYMOND + ALEX',nsfw:false,tr:true,mid:'<span class="vs">VS</span>',
+  p:'tdg',NPC:'RAYMOND',PC:'ALEX',icon:'🐯',title:'',nsfw:false,tr:true,headEmo:true,mid:'<span class="vs">VS</span>',
   tabs:[['status','STATUS'],['community','COM'],['interview','INT']],
   on:'background:var(--red);border-color:var(--red);color:var(--ink);padding:7px 2px',
   chips:a=>[['🖤',withPct(a.affection)],['🦊',String(a.relation||'').trim()||'-'],['⚔️',dPlus(a.daysMet)]],
@@ -650,9 +651,9 @@ const TDG_CFG={
 .tdg *{box-sizing:border-box}
 .tdg-sum{display:block;width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;user-select:none;font-family:inherit;text-align:left}
 .tdg-head{background:linear-gradient(165deg,#1c1013 0%,#0d0809 75%);padding:14px 18px;border-radius:3px;width:100%}
-.tdg-htop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.tdg-title{display:inline-block;background:var(--red);color:var(--ink);font-weight:800;font-size:12px;letter-spacing:1px;padding:5px 12px;border-radius:4px;margin-bottom:10px}
-.tdg-arrow{font-size:9px;color:var(--mute);padding-top:7px;flex-shrink:0}
+.tdg-htop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.tdg-htop:last-child{margin-bottom:0}
+.tdg-arrow{font-size:9px;color:var(--mute);flex-shrink:0}
 .tdg-meta{font-size:11px;font-weight:bold;color:var(--txt);letter-spacing:-.2px;margin-bottom:4px}
 .tdg-meta:last-child{margin-bottom:0}
 .tdg-body{background:var(--bg);border-radius:0 0 3px 3px;overflow:hidden;border:1px solid var(--line);border-top:4px solid var(--red);margin-top:0}
@@ -668,12 +669,12 @@ const TDG_CFG={
 .tdg-mind{font-size:11px;color:var(--ink2);line-height:1.5;background:var(--bg2);padding:10px;border:1px solid var(--line);border-radius:2px;border-left:3px solid var(--red);white-space:pre-wrap}
 .tdg-num{display:flex;gap:8px;padding:1px 0;white-space:normal}
 .tdg-num b{color:var(--red);flex-shrink:0}
-.tdg-emo{display:flex;align-items:center;gap:6px}
-.tdg-emo div{flex:1;min-width:0;overflow-wrap:anywhere;font-family:sans-serif;font-weight:bold;font-size:11px;text-align:center;padding:8px 6px;border-radius:2px}
+.tdg-emo{display:flex;align-items:center;gap:5px;min-width:0}
+.tdg-emo div{flex:0 1 auto;min-width:0;max-width:160px;overflow-wrap:anywhere;font-family:sans-serif;font-weight:bold;font-size:10.5px;line-height:1.3;text-align:center;padding:4px 9px;border-radius:2px}
 .tdg-emo .c{background:var(--red);color:var(--ink)}
 .tdg-emo .u{background:#03fcdb;color:var(--dark)}
-.tdg-emo span{font-size:13px;color:var(--red);flex-shrink:0}
-.tdg-emo .vs{font-size:11px;font-weight:800;letter-spacing:1px;font-style:italic}
+.tdg-emo span{font-size:11px;color:var(--red);flex-shrink:0}
+.tdg-emo .vs{font-size:10px;font-weight:800;letter-spacing:1px;font-style:italic}
 .tdg-badge{display:inline-block;align-self:flex-start;background:var(--red);color:var(--ink);font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:2px}
 .tdg-comm-t{font-weight:800;font-size:13px;line-height:1.5;color:var(--ink)}
 .tdg-cmt{border-top:1px dashed var(--line);padding-top:8px}
